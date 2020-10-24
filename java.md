@@ -861,17 +861,76 @@ throws ServletException, IOException {
 }
 ```
 
+#### 2、servlet的生命周期 
+
+1. Servlet 通过调用 init () 方法进行初始化。
+
+   init 方法被设计成只调用一次。它在第一次创建 Servlet 时被调用，在后续每次用户请求时不再调用。
+
+   **Servlet 是单例的**  多个用户同时访问存在线程安全问题 
+
+   **解决办法：**尽量不要在Servlet 中定义成员变量。即使定义了成员变量，也不要对其修改值
+
+2. Servlet 调用 service() 方法来处理客户端的请求。
+
+   每次访问Servlet时，Service方法都会被调用一次。
+
+3. Servlet 通过调用 destroy() 方法终止（结束）。
+
+   destroy() 方法只会被调用一次，在 Servlet 生命周期结束时被调用。destroy() 方法可以让您的 Servlet 关闭数据库连接、停止后台线程、把 Cookie 列表或点击计数器写入到磁盘，并执行其他类似的清理活动。
+
+#### 3、如何现实servlet的单线程模式 
+
+```jsp
+<%@ page isThreadSafe="false"%>
+```
+
+#### **4.forward 和redirect的区别?**
+
+**forward(转发)**:
+
+- 是服务器请求资源，服务器直接访问目标地址的URL，把那个URl的相应内容读取过来，然后把这些内容在发给浏览器。对于浏览器来说不知道内容从哪来的，因为跳转过程是在服务器实现的。所以它的地址还是原来的地址
+
+**redirect(重定向)**
+
+- 是服务端根据逻辑发送一个状态码，告诉浏览器重新去请求那个地址，所以地址栏显示的是新的URL
+
+`转发是服务器行为，重定向是客户端行为`
+
+**区别：**
+
+1. 数据共享来说 
+
+- forward：转发页面和转发到的页面可以共享request里面的数据
+- redirect 不能共享数据
+
+2. 从地址栏来说 forward 不变 redirect 边
+
+3. 从运用地方来说
+
+   forward： 一般用于用户登录的时候，根据角色转发到相应的模块
+
+   redirect：一般用于用户注销登录时返回主页面或跳转到其它的网站等
+
+4. 从效率来说
+
+   forward 高于 direct
+
+#### 5.什么情况下调用doGet()和doPost()？
+
+Jsp页面中的form标签里的method属性为get时调用doGet()，为post时调用doPost()。
+
+#### **6.JSP和Servlet有哪些相同点和不同点，他们之间的联系是什么？** 
+
+ 答：JSP是Servlet技术的扩展，本质上是Servlet的简易方式，更强调应用的外表表达。JSP编译后是**"类servlet"**。
+
+Servlet和JSP最主要的不同点在于，Servlet的应用逻辑是在Java文件中，并且完全从表示层中的HTML里分离开来。而JSP的情况是Java和HTML可以组合成一个扩展名为.jsp的文件。
+
+JSP侧重于视图，Servlet主要用于控制逻辑。
+
+#### **7.请解释Filter和Listener的理解及作用？**、
 
 
-#### 2、servlet的init()方法和service()方法的区别 
-
-#### 3、servlet的生命周期 
-
-#### 4、如何现实servlet的单线程模式 
-
-#### 5、servlet的配置 
-
-#### 6、四种会话跟踪技术 
 
 ### EJB 
 
@@ -926,35 +985,15 @@ home接口是EJB工厂用于创建和移除查找EJB实例
 
 ### 1.为什么要使用Spring？
 
-**1.简介**
+使用Spring 框架带来的主要好处
 
-- 目的：解决企业应用开发的复杂性
-- 功能：使用基本的JavaBean代替EJB，并提供了更多的企业应用功能
-- 范围：任何Java应用
-
-简单来说，Spring是一个轻量级的控制反转(IoC)和面向切面(AOP)的容器框架。
-
-**2.轻量**　　
-
-从大小与开销两方面而言Spring都是轻量的。完整的Spring框架可以在一个大小只有1MB多的JAR文件里发布。并且Spring所需的处理开销也是微不足道的。此外，Spring是非侵入式的：典型地，Spring应用中的对象不依赖于Spring的特定类。
-
-**3.控制反转**　　
-
-Spring通过一种称作控制反转（IoC）的技术促进了**松耦合**。当应用了IoC，一个对象依赖的其它对象会通过被动的方式传递进来，而不是这个对象自己创建或者查找依赖对象。你可以认为IoC与JNDI相反——**不是对象从容器中查找依赖，而是容器在对象初始化时不等对象请求就主动将依赖传递给它。**
-
-**4.面向切面**　　
-
-Spring提供了面向切面编程的丰富支持，允许通过分离应用的业务逻辑与系统级服务（例如审计（auditing）和事务（transaction）管理）进行内聚性的开发。应用对象只实现它们应该做的——完成业务逻辑——仅此而已。它们并不负责（甚至是意识）其它的系统级关注点，例如日志或事务支持。
-
-**5.容器**
-
-Spring包含并管理应用对象的配置和生命周期，在这个意义上它是一种容器，你可以配置你的每个bean如何被创建——基于一个可配置原型（prototype），你的bean可以创建一个单独的实例或者每次需要时都生成一个新的实例——以及它们是如何相互关联的。然而，Spring不应该被混同于传统的重量级的EJB容器，它们经常是庞大与笨重的，难以使用。
-
-**6.框架**
-
-Spring可以将简单的组件配置、组合成为复杂的应用。在Spring中，应用对象被声明式地组合，典型地是在一个XML文件里。Spring也提供了很多基础功能（事务管理、持久化框架集成等等），将应用逻辑的开发留给了你。
-
-所有Spring的这些特征使你能够编写更干净、更可管理、并且更易于测试的代码。它们也为Spring中的各种模块提供了基础支持。
+- Dependency Injection(DI) 依赖注入 使得构造器和 JavaBean properties 文件的依赖关系一目了然
+- 与 EJB 容器相比较，Ioc 容器更加趋向于轻量级。这样一来IoC容器在有限的内存和CPU 资源的情况下进行应用程序的开发和发布 就变得十分有利
+- Spring 并没有闭门造车，Spring 利用了已有的技术 比如ORM框架、logging 框架、 j2EE、
+- Spring 框架是按照模块的形式组织的。由包和类的编号就可以看出其所属的模块，开发者仅仅需要选用他们需要的模块即可
+- 测试 Spring 开发的应用程序十分简单，利用JavaBean形式的POJO类，可以很方便的利用DI 来写入测试数据
+- Spring MVC 是一个精心设计的WEB 框架
+- Spring 提供了一个便捷的事务管理接口，使用于小型的本地事务处理
 
 ###  **2.解释一下什么是 aop？**
 
@@ -969,6 +1008,8 @@ AOP（Aspect-Oriented Programming，面向方面编程），可以说是OOP（Ob
 ### **3.解释一下什么是 ioc？**
 
 IOC是Inversion of Control的缩写，多数书籍翻译成“**控制反转”。**
+
+**IOC:把对象的创建、初始化、销毁交给Spring来管理，而不是由开发者控制，实现了控制反转**
 
 1996年，Michael Mattson在一篇有关探讨面向对象框架的文章中，首先提出了IOC 这个概念。对于面向对象设计及编程的基本思想，前面我们已经讲了很多了，不再赘述，简单来说就是把复杂系统分解成相互合作的对象，这些对象类通过封装以后，内部实现对外部是透明的，从而降低了解决问题的复杂度，而且可以灵活地被重用和扩展。　
 
@@ -1112,7 +1153,49 @@ RequestMapping是一个用来处理请求地址映射的注解，可用于类或
 
    ​	headers：指定request中必须包含某些指定的header值，才能让该方法处理请求。
 
-### 13.Spring中Bean的作用域有哪些？
+### 13. 如何解决Web页面乱码问题？
+
+```java
+<filter>
+	<filter-name>encodingFilter</filter-name>
+	<filter-class>
+		org.springframework.web.filter.CharacterEncodingFilter
+	</filter-class>
+           <init-param>
+                <param-name>encoding</param-name>
+                <param-value>UTF-8</param-value>
+           </init-param>
+            
+           <init-param>
+                <param-name>forceEncoding</param-name>
+                <param-value>true</param-value>
+           </init-param>
+	</filter>
+        
+	<filter-mapping>
+		<filter-name>encodingFilter</filter-name>
+		<url-pattern>*</url-pattern>
+	</filter-mapping>
+
+```
+
+### 14.BeanFactory、FactoryBean 和 ApplicationContext 的区别
+
+**BeanFactory 是一个Bean工厂**，使用简单工厂模式，是Spring IoC的顶级接口，可以理解为含有Bean 集合的工厂类，作用是管理Bean，包括实例化、定位、配置对象及建立这些对象的依赖。
+
+BeanFactory 实例化后并不会自动实例化Bean，**只有 当Bean 被使用时才实例化与装配依赖关系，属于延迟加载，适合多例模式**
+
+------
+
+**FactoryBean 是一个工厂 Bean，使用了工厂方法模式**，作用是生产其他Bean 实例，可以通过实现该接口，提供一个工厂方法来自定义实例化Bean逻辑。
+
+**FactoryBean 接口由 BeanFactory 中配置的对象实现**，这些对象本身就是用于创建对象的工厂，如果一个 Bean 实现了这个接口，那么它就是创建对象的工厂 Bean，而不是 Bean 实例本身。
+
+------
+
+**ApplicationConext 是 BeanFactory 的子接口**，扩展了 BeanFactory 的功能，提供了支持国际化的文本消息，**统一的资源文件读取方式**，**事件传播**以**及应用层的特别配置**等。
+
+容器会在初始化时对配置的Bean 进行预实例化，Bean 的依赖注入在容器初始化时就已经完成，属于立即加载，适合单例模式，一般推荐使用。
 
 
 
