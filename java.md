@@ -1,4 +1,4 @@
-# Java面试题集
+Java面试题集
 
 ## ⭐架构师⭐
 
@@ -997,13 +997,17 @@ home接口是EJB工厂用于创建和移除查找EJB实例
 
 ###  **2.解释一下什么是 aop？**
 
-AOP（Aspect-Oriented Programming，面向方面编程），可以说是OOP（Object-Oriented Programing，面向对象编程）的补充和完善。OOP引入封装、继承和多态性等概念来建立一种对象层次结构，用以模拟公共行为的一个集合。
+AOP（Aspect-Oriented Programming，面向切面编程），可以说是OOP（Object-Oriented Programing，面向对象编程）的补充和完善。OOP引入封装、继承和多态性等概念来建立一种对象层次结构，用以模拟公共行为的一个集合。
 
-**当我们需要为分散的对象引入公共行为的时候，OOP则显得无能为力。**也就是说，OOP允许你定义从上到下的关系，但并不适合定义从左到右的关系。例如日志功能。日志代码往往水平地散布在所有对象层次中，而与它所散布到的对象的核心功能毫无关系。对于其他类型的代码，如安全性、异常处理和透明的持续性也是如此。这种散布在各处的无关的代码被称为横切（cross-cutting）代码，在OOP设计中，它导致了大量代码的重复，而不利于各个模块的重用。
+**当我们需要为分散的对象引入公共行为的时候，OOP则显得无能为力。**也就是说，OOP允许你定义从上到下的关系，但并不适合定义从左到右的关系。例如日志功能。日志代码往往水平地散布在所有对象层次中，而与它所散布到的对象的核心功能毫无关系。对于其他类型的代码，如安全性、异常处理和透明的持续性也是如此。**这种散布在各处的无关的代码被称为横切（cross-cutting）代码，**在OOP设计中，它导致了大量代码的重复，而不利于各个模块的重用。
 
-而**AOP技术则恰恰相反**，它利用一种称为“横切”的技术，剖解开封装的对象内部，并将那些影响了多个类的公共行为封装到**一个可重用模块**，并将其名为“Aspect”，即切面。所谓“切面”，简单地说，就是将那些与业务无关，却为业务模块所共同调用的逻辑或责任封装起来，便于减少系统的重复代码，降低模块间的耦合度，并有利于未来的可操作性和可维护性。AOP代表的是一个横向的关系，如果说“对象”是一个空心的圆柱体，其中封装的是对象的属性和行为；那么面向方面编程的方法，就仿佛一把利刃，将这些空心圆柱体剖开，以获得其内部的消息。而剖开的切面，也就是所谓的“方面”了。然后它又以巧夺天功的妙手将这些剖开的切面复原，不留痕迹。
+而**AOP技术则恰恰相反**，它利用一种称为“横切”的技术，剖解开封装的对象内部，并将那些影响了多个类的公共行为封装到**一个可重用模块**，并将其名为“Aspect”，即切面。所谓“切面”，简单地说，就是将那些与业务无关，却为业务模块所共同调用的逻辑或责任封装起来，
 
-使用“横切”技术，AOP把软件系统分为两个部分：核心关注点和横切关注点。业务处理的主要流程是核心关注点，与之关系不大的部分是横切关注点。横切关注点的一个特点是，他们经常发生在核心关注点的多处，而各处都基本相似。比如权限认证、日志、事务处理。Aop 的作用在于分离系统中的各种关注点，将核心关注点和横切关注点分离开来。正如Avanade公司的高级方案构架师Adam Magee所说，AOP的核心思想就是“将应用程序中的商业逻辑同对其提供支持的通用服务进行分离。”
+**便于减少系统的重复代码，降低模块间的耦合度**，并有利于未来的可操作性和可维护性。
+
+AOP代表的是一个横向的关系，如果说“对象”是一个空心的圆柱体，其中封装的是对象的属性和行为；那么面向方面编程的方法，就仿佛一把利刃，将这些空心圆柱体剖开，以获得其内部的消息。而剖开的切面，也就是所谓的“方面”了。然后它又以巧夺天功的妙手将这些剖开的切面复原，不留痕迹。
+
+使用“横切”技术，AOP把软件系统分为两个部分：**核心关注点和横切关注点**。业务处理的主要流程是核心关注点，与之关系不大的部分是横切关注点。横切关注点的一个特点是，他们经常发生在核心关注点的多处，而各处都基本相似。比如权限认证、日志、事务处理。Aop 的作用在于分离系统中的各种关注点，将核心关注点和横切关注点分离开来。正如Avanade公司的高级方案构架师Adam Magee所说，AOP的核心思想就是“将应用程序中的商业逻辑同对其提供支持的通用服务进行分离。”
 
 ### **3.解释一下什么是 ioc？**
 
@@ -1057,7 +1061,9 @@ Spring容器中的Bean是否线程安全，容器本身并没有提供Bean的线
 
 其中比较常用的是singleton和prototype两种作用域。**对于singleton作用域的Bean，每次请求该Bean都将获得相同的实例。**容器负责跟踪Bean实例的状态，负责维护Bean实例的生命周期行为；如果一个Bean被设置成prototype作用域，程序每次请求该id的Bean，Spring都会新建一个Bean实例，然后返回给程序。在这种情况下，Spring容器仅仅使用new 关键字创建Bean实例，一旦创建成功，容器不在跟踪实例，也不会维护Bean实例的状态。
 
-如果不指定Bean的作用域，Spring默认使用singleton作用域。Java在创建Java实例时，需要进行内存申请；销毁实例时，需要完成垃圾回收，这些工作都会导致系统开销的增加。因此，prototype作用域Bean的创建、销毁代价比较大。而singleton作用域的Bean实例一旦创建成功，可以重复使用。因此，除非必要，否则尽量避免将Bean被设置成prototype作用域。
+如果不指定Bean的作用域，**Spring默认使用singleton作用域**。
+
+Java在创建Java实例时，需要进行内存申请；**销毁实例时，需要完成垃圾回收，这些工作都会导致系统开销的增加。**因此，prototype作用域Bean的创建、销毁代价比较大。**而singleton作用域的Bean实例一旦创建成功，可以重复使用。**因此，除非必要，否则尽量避免将Bean被设置成prototype作用域。
 
 ### **7.spring 自动装配 bean 有哪些方式？**
 
@@ -1088,100 +1094,7 @@ Spring容器负责创建应用程序中的bean同时通过ID来协调这些对�
 
 - 不可重复读：比方说在同一个事务中先后执行两条一模一样的select语句，期间在此次事务中没有执行过任何DDL语句，但先后得到的结果不一致，这就是不可重复读。
 
-### **10.说一下 spring mvc 运行流程？**
-
-**Spring MVC运行流程图：**
-
-![image-20201010123810046](C:\Users\hp\Desktop\java面试题\img\image-20201010123810046.png)
-
-**Spring运行流程描述：**
-
-1. 用户向服务器发送请求，请求被Spring 前端控制Servelt DispatcherServlet捕获；
-
-2. DispatcherServlet对请求URL进行解析，得到请求资源标识符（URI）。然后根据该URI，调用HandlerMapping获得该Handler配置的所有相关的对象（包括Handler对象以及Handler对象对应的拦截器），最后以HandlerExecutionChain对象的形式返回；
-
-3. DispatcherServlet 根据获得的Handler，选择一个合适的HandlerAdapter；（附注：如果成功获得HandlerAdapter后，此时将开始执行拦截器的preHandler(...)方法）
-
-4. 提取Request中的模型数据，填充Handler入参，开始执行Handler（Controller)。 在填充Handler的入参过程中，根据你的配置，Spring将帮你做一些额外的工作：
-
-- HttpMessageConveter： 将请求消息（如Json、xml等数据）转换成一个对象，将对象转换为指定的响应信息
-- 数据转换：对请求消息进行数据转换。如String转换成Integer、Double等
-- 数据格式化：对请求消息进行数据格式化。 如将字符串转换成格式化数字或格式化日期等
-- 数据验证： 验证数据的有效性（长度、格式等），验证结果存储到BindingResult或Error中
-
-5. Handler执行完成后，向DispatcherServlet 返回一个ModelAndView对象；
-
-6. 根据返回的ModelAndView，选择一个适合的ViewResolver（必须是已经注册到Spring容器中的ViewResolver)返回给DispatcherServlet ；
-
-7. ViewResolver 结合Model和View，来渲染视图；
-
-8. 将渲染结果返回给客户端。
-
-###  **11.spring mvc 有哪些组件？**
-
-**Spring MVC的核心组件：**
-
-1. DispatcherServlet：中央控制器，把请求给转发到具体的控制类
-2. Controller：具体处理请求的控制器
-3. HandlerMapping：映射处理器，负责映射中央处理器转发给controller时的映射策略
-4. ModelAndView：服务层返回的数据和视图层的封装类
-5. ViewResolver：视图解析器，解析具体的视图
-6. Interceptors ：拦截器，负责拦截我们定义的请求然后做处理工作
-
-### 12.@RequestMapping 的作用是什么？
-
-RequestMapping是一个用来处理请求地址映射的注解，可用于类或方法上。**用于类上，表示类中的所有响应请求的方法都是以该地址作为父路径。**
-
-**RequestMapping注解有六个属性，下面我们把她分成三类进行说明。**
-
-1. **value， method：**
-
-
-   value：指定请求的实际地址，指定的地址可以是URI Template 模式（后面将会说明）；
-
-   method：指定请求的method类型， GET、POST、PUT、DELETE等；
-
-2. **consumes，produces**
-
-
-   consumes：指定处理请求的提交内容类型（Content-Type），例如application/json, text/html；
-
-   produces：指定返回的内容类型，仅当request请求头中的(Accept)类型中包含该指定类型才返回；
-
-3. **params，headers**
-
-
-   ​	params： 指定request中必须包含某些参数值是，才让该方法处理。
-
-   ​	headers：指定request中必须包含某些指定的header值，才能让该方法处理请求。
-
-### 13. 如何解决Web页面乱码问题？
-
-```java
-<filter>
-	<filter-name>encodingFilter</filter-name>
-	<filter-class>
-		org.springframework.web.filter.CharacterEncodingFilter
-	</filter-class>
-           <init-param>
-                <param-name>encoding</param-name>
-                <param-value>UTF-8</param-value>
-           </init-param>
-            
-           <init-param>
-                <param-name>forceEncoding</param-name>
-                <param-value>true</param-value>
-           </init-param>
-	</filter>
-        
-	<filter-mapping>
-		<filter-name>encodingFilter</filter-name>
-		<url-pattern>*</url-pattern>
-	</filter-mapping>
-
-```
-
-### 14.BeanFactory、FactoryBean 和 ApplicationContext 的区别
+###  14.BeanFactory、FactoryBean 和 ApplicationContext 的区别
 
 **BeanFactory 是一个Bean工厂**，使用简单工厂模式，是Spring IoC的顶级接口，可以理解为含有Bean 集合的工厂类，作用是管理Bean，包括实例化、定位、配置对象及建立这些对象的依赖。
 
@@ -1283,6 +1196,33 @@ spring 框架提供了以下4种方式来管理bean 的声明周期事件
 
 ### 3.Spring MVC 工作流程
 
+**Spring MVC运行流程图：**
+
+![image-20201010123810046](C:\Users\hp\Desktop\java面试题\img\image-20201010123810046.png)
+
+**Spring运行流程描述：**
+
+1. 用户向服务器发送请求，请求被Spring 前端控制Servelt DispatcherServlet捕获；
+
+2. DispatcherServlet对请求URL进行解析，得到请求资源标识符（URI）。然后根据该URI，调用HandlerMapping获得该Handler配置的所有相关的对象（包括Handler对象以及Handler对象对应的拦截器），最后以HandlerExecutionChain对象的形式返回；
+
+3. DispatcherServlet 根据获得的Handler，选择一个合适的HandlerAdapter；（附注：如果成功获得HandlerAdapter后，此时将开始执行拦截器的preHandler(...)方法）
+
+4. 提取Request中的模型数据，填充Handler入参，开始执行Handler（Controller)。 在填充Handler的入参过程中，根据你的配置，Spring将帮你做一些额外的工作：
+
+- HttpMessageConveter： 将请求消息（如Json、xml等数据）转换成一个对象，将对象转换为指定的响应信息
+- 数据转换：对请求消息进行数据转换。如String转换成Integer、Double等
+- 数据格式化：对请求消息进行数据格式化。 如将字符串转换成格式化数字或格式化日期等
+- 数据验证： 验证数据的有效性（长度、格式等），验证结果存储到BindingResult或Error中
+
+5. Handler执行完成后，向DispatcherServlet 返回一个ModelAndView对象；
+
+6. 根据返回的ModelAndView，选择一个适合的ViewResolver（必须是已经注册到Spring容器中的ViewResolver)返回给DispatcherServlet ；
+
+7. ViewResolver 结合Model和View，来渲染视图；
+
+8. 将渲染结果返回给客户端。
+
 ![image-20201024224359387](C:\Users\hp\Desktop\java面试题\img\image-20201024224359387.png)
 
 ![image-20201024224842475](C:\Users\hp\Desktop\java面试题\img\image-20201024224842475.png)
@@ -1311,13 +1251,77 @@ spring 框架提供了以下4种方式来管理bean 的声明周期事件
 
 ![image-20201024225728888](C:\Users\hp\Desktop\java面试题\img\image-20201024225728888.png)
 
+###  11.spring mvc 有哪些组件？
+
+**Spring MVC的核心组件：**
+
+1. DispatcherServlet：中央控制器，把请求给转发到具体的控制类
+2. Controller：具体处理请求的控制器
+3. HandlerMapping：映射处理器，负责映射中央处理器转发给controller时的映射策略
+4. ModelAndView：服务层返回的数据和视图层的封装类
+5. ViewResolver：视图解析器，解析具体的视图
+6. Interceptors ：拦截器，负责拦截我们定义的请求然后做处理工作
+
+### 12.@RequestMapping 的作用是什么？
+
+RequestMapping是一个用来处理请求地址映射的注解，可用于类或方法上。**用于类上，表示类中的所有响应请求的方法都是以该地址作为父路径。**
+
+**RequestMapping注解有六个属性，下面我们把她分成三类进行说明。**
+
+1. **value， method：**
+
+
+   value：指定请求的实际地址，指定的地址可以是URI Template 模式（后面将会说明）；
+
+   method：指定请求的method类型， GET、POST、PUT、DELETE等；
+
+2. **consumes，produces**
+
+
+   consumes：指定处理请求的提交内容类型（Content-Type），例如application/json, text/html；
+
+   produces：指定返回的内容类型，仅当request请求头中的(Accept)类型中包含该指定类型才返回；
+
+3. **params，headers**
+
+
+   ​	params： 指定request中必须包含某些参数值是，才让该方法处理。
+
+   ​	headers：指定request中必须包含某些指定的header值，才能让该方法处理请求。
+
+### 13. 如何解决Web页面乱码问题？
+
+```java
+<filter>
+	<filter-name>encodingFilter</filter-name>
+	<filter-class>
+		org.springframework.web.filter.CharacterEncodingFilter
+	</filter-class>
+           <init-param>
+                <param-name>encoding</param-name>
+                <param-value>UTF-8</param-value>
+           </init-param>
+            
+           <init-param>
+                <param-name>forceEncoding</param-name>
+                <param-value>true</param-value>
+           </init-param>
+	</filter>
+        
+	<filter-mapping>
+		<filter-name>encodingFilter</filter-name>
+		<url-pattern>*</url-pattern>
+	</filter-mapping>
+
+```
+
 ## ⭐Spring boot⭐
 
-### 13.什么是 spring boot？
+### 1.什么是 spring boot？
 
 在Spring框架这个大家族中，产生了很多衍生框架，比如 Spring、SpringMvc框架等，Spring的核心内容在于控制反转(IOC)和依赖注入(DI),所谓控制反转并非是一种技术，而是一种思想，在操作方面是指在spring配置文件中创建<bean>，依赖注入即为由spring容器为应用程序的某个对象提供资源，比如 引用对象、常量数据等。
 
-SpringBoot是一个框架，一种全新的编程规范，他的产生简化了框架的使用，所谓简化是指简化了Spring众多框架中所需的大量且繁琐的配置文件，所以 SpringBoot是一个服务于框架的框架，服务范围是简化配置文件。
+SpringBoot是一个框架，一种全新的编程规范，他的产生**简化了框架的使用**，所谓**简化是指简化了Spring众多框架中所需的大量且繁琐的配置文件**，所以 SpringBoot是一个服务于框架的框架，服务范围是简化配置文件。
 
 **为什么要用 spring boot？**
 
@@ -1327,23 +1331,26 @@ SpringBoot是一个框架，一种全新的编程规范，他的产生简化了�
 - Spring Boot使监控变简单
 - Spring的不足
 
-### **14.spring boot 核心配置文件是什么？**
+### 2.spring boot 核心配置文件是什么？
 
 Spring Boot提供了两种常用的配置文件：
 
 - properties文件，
 - yml文件   yml文件更年轻，也有很多的坑，可谓成也萧何败萧何，yml通过空格来确定层级关系，使配置文件结构跟清晰，但也会因为微不足道的空格而破坏了层级关系。
 
-###  **15.jpa 和 hibernate 有什么区别？**
+### 3.Spring boot 中的监视器是什么
 
-- JPA Java Persistence API，是Java EE 5的标准ORM接口，也是ejb3规范的一部分。
-- Hibernate，当今很流行的ORM框架，是JPA的一个实现，但是其功能是JPA的超集。
-- JPA和Hibernate之间的关系，可以简单的理解为JPA是标准接口，Hibernate是实现。那么Hibernate是如何实现与JPA的这种关系的呢。Hibernate主要是通过三个组件来实现的，及hibernate-annotation、hibernate-entitymanager和hibernate-core。
-- hibernate-annotation是Hibernate支持annotation方式配置的基础，它包括了标准的JPA annotation以及Hibernate自身特殊功能的annotation。
-- hibernate-core是Hibernate的核心实现，提供了Hibernate所有的核心功能。
-- hibernate-entitymanager实现了标准的JPA，可以把它看成hibernate-core和JPA之间的适配器，它并不直接提供ORM的功能，而是对hibernate-core进行封装，使得Hibernate符合JPA的规范。
+actuator  执行机构 
 
-###  16.**什么是 spring cloud？**
+![image-20201025113529961](C:\Users\hp\Desktop\java面试题\img\image-20201025113529961.png)
+
+### 4.如何在自定义端口上运行 Spring boot
+
+![image-20201025163717257](C:\Users\hp\Desktop\java面试题\img\image-20201025163717257.png)
+
+## ⭐Spring Cloud⭐
+
+###  1.**什么是 spring cloud？**
 
 从字面理解，Spring Cloud 就是致力于分布式系统、云服务的框架。
 
@@ -1381,13 +1388,13 @@ Spring Cloud 为开发人员提供了快速构建分布式系统中一些常见�
 
 使用 Spring Cloud 开发人员可以开箱即用的实现这些模式的服务和应用程序。这些服务可以任何环境下运行，包括分布式环境，也包括开发人员自己的笔记本电脑以及各种托管平台。
 
-### **17.spring cloud 断路器的作用是什么？**
+### **2.spring cloud 断路器的作用是什么？**
 
 **断路器（Hystrix）可以防止一个应用程序多次试图执行一个操作，即很可能失败，导致整个系统瘫痪**
 
 当某个服务单元发生故障之后，通过断路器的故障监控（类似保险丝），像调用放返回一个错误响应，而不是长时间的等待。这样就不会使得线程因调用故障服务被长时间得不到释放，避免了故障在分布式系统中的蔓延。
 
-### **18.spring cloud 的核心组件有哪些？**
+### **3.spring cloud 的核心组件有哪些？**
 
 **① 服务发现——Netflix Eureka**
 
@@ -1408,6 +1415,72 @@ Ribbon，主要提供客户侧的软件**负载均衡算法**。Ribbon客户端�
 **⑤ 分布式配置——Spring Cloud Config**
 
 这个还是静态的，得配合Spring Cloud Bus实现动态的配置更新。
+
+### 4.服务注册和发现是什么意思？
+
+![image-20201025101211656](C:\Users\hp\Desktop\java面试题\img\image-20201025101211656.png)
+
+### 5.负载均衡的意义是什么
+
+可以改善跨计算机，计算机集群，网络连接，中央处理单元或磁盘驱动等多种计算
+
+负载均衡指在优化资源使用，最大化吞吐量，最小化响应时间，防止任何单一资源的过载
+
+使用多个组件进行负载均衡而不是单个组件可能会通过冗余来提高 高可用性和高可靠性。
+
+### 6.什么是 Hystrix？ 它如何实现容错
+
+Hystrix 是一个延迟和容错库，指在隔离远程系统，服务和第三方的访问点，当出现不可避免的故障时，停止级联故障并在复杂的分布式系统中时下你弹性。
+
+ 当服务出现了故障后，就使用我们预先定义的回退方法
+
+![image-20201025103105859](C:\Users\hp\Desktop\java面试题\img\image-20201025103105859.png)
+
+![image-20201025103120861](C:\Users\hp\Desktop\java面试题\img\image-20201025103120861.png)
+
+![image-20201025103135985](C:\Users\hp\Desktop\java面试题\img\image-20201025103135985.png)
+
+![image-20201025103246683](C:\Users\hp\Desktop\java面试题\img\image-20201025103246683.png)
+
+### 7.什么是 Netflix Fegin
+
+![image-20201025103426442](C:\Users\hp\Desktop\java面试题\img\image-20201025103426442.png)
+
+### 8，Feign 的优缺点
+
+**优点**
+使用Spring Cloud Feign继承特性的优点很明显，可以将接口的定义从Controller中剥离，同时配合Maven私有仓库就可以轻易地实现接口定义的共享，实现在构建期的接口绑定，从而有效减少服务客户端的绑定配置。这么做虽然可以很方便地实现接口定义和依赖的共享，不用再复制粘贴接口进行绑定，但是这样的做法使用不当的话会带来副作用。
+
+**缺点**
+由于接口在构建期间就建立起了依赖，那么接口变动就会对项目构建造成影响，可能服务提供方修改了一个接口定义，那么会直接导致客户端工程的构建失败。所以，如果开发团队通过此方法来实现接口共享的话，建议在开发评审期间严格遵守面向对象的开闭原则，尽可能地做好前后版本的兼容，防止牵一发而动全身的后果，增加团队不必要的维护工作量
+
+### 9.什么是Spring Cloud Bus
+
+![image-20201025103926634](C:\Users\hp\Desktop\java面试题\img\image-20201025103926634.png)
+
+![image-20201025103941140](C:\Users\hp\Desktop\java面试题\img\image-20201025103941140.png)
+
+![image-20201025104004357](C:\Users\hp\Desktop\java面试题\img\image-20201025104004357.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## ⭐Mybatis⭐
 
@@ -1436,7 +1509,7 @@ Mybatis**仅支持association关联对象**和**collection关联集合对象**�
 
 association指的就是一对一，collection指的就是一对多查询。
 
-在Mybatis配置文件中，可以配置是否启用延迟加载lazyLoadingEnabled=true|false。
+在Mybatis配置文件中，可以配置是否启用延迟加载**lazyLoadingEnabled=true|false**。
 
 它的原理是，使用CGLIB创建目标对象的代理对象，当调用目标方法时，进入拦截器方法，比如调用a.getB().getName()，拦截器invoke()方法发现a.getB()是null值，那么就会单独发送事先保存好的查询关联B对象的sql，把B查询上来，然后调用a.setB(b)，于是a的对象b属性就有值了，接着完成a.getB().getName()方法的调用。这就是延迟加载的基本原理。
 
@@ -1489,6 +1562,66 @@ Mybatis有三种基本的执行器（Executor）：
 ![image-20201024231828202](C:\Users\hp\Desktop\java面试题\img\image-20201024231828202.png)
 
 ![image-20201024231900065](C:\Users\hp\Desktop\java面试题\img\image-20201024231900065.png)
+
+### 12.MyBatis 实现一对一有几种方式
+
+![image-20201025093907631](C:\Users\hp\Desktop\java面试题\img\image-20201025093907631.png)
+
+### 13.Mybatis 是如何将sql 执行结果封装为目标对象并返回的
+
+![image-20201025094114073](C:\Users\hp\Desktop\java面试题\img\image-20201025094114073.png)
+
+### 14.当实体类中的属性名和表中的字段名不一样，如何将查询的结果封装到指定 pojo
+
+1. 通过在查询的sql 语句中定义字段名的别名
+2. 通过<resultMap> 来映射字段名和实体类属性名的一 一 对应关系（注解开发使用@Results）
+
+### 15.映射文件问题
+
+![image-20201025095232573](C:\Users\hp\Desktop\java面试题\img\image-20201025095232573.png)
+
+![image-20201025095211697](C:\Users\hp\Desktop\java面试题\img\image-20201025095211697.png)
+
+### 16.不同的Xml 映射文件，id 是否可以重复
+
+![image-20201025095511170](C:\Users\hp\Desktop\java面试题\img\image-20201025095511170.png)
+
+### 17.Mybatis 中如何执行批处理
+
+使用BatchExecutor 完成批处理
+
+### 18.Mybatis 中如何指定使用哪一种 Executor 执行器？
+
+![image-20201025095812831](C:\Users\hp\Desktop\java面试题\img\image-20201025095812831.png)
+
+### 19.如何获取自动生成的（主）键值
+
+配置文件设置 usegeneratedkeys 为 true
+
+![image-20201025100037893](C:\Users\hp\Desktop\java面试题\img\image-20201025100037893.png)
+
+### 20.resultType 和resultMap 区别
+
+![image-20201025100127834](C:\Users\hp\Desktop\java面试题\img\image-20201025100127834.png)
+
+### 21.使用Mybatis 的mapper 接口调用时有哪些要求
+
+![image-20201025100255913](C:\Users\hp\Desktop\java面试题\img\image-20201025100255913.png)
+
+###  22.jpa 和 hibernate 有什么区别？
+
+- JPA Java Persistence API，是Java EE 5的标准ORM接口，也是ejb3规范的一部分。
+- Hibernate，当今很流行的ORM框架，是JPA的一个实现，但是其功能是JPA的超集。
+- JPA和Hibernate之间的关系，可以简单的理解为JPA是标准接口，Hibernate是实现。那么Hibernate是如何实现与JPA的这种关系的呢。Hibernate主要是通过三个组件来实现的，及hibernate-annotation、hibernate-entitymanager和hibernate-core。
+- hibernate-annotation是Hibernate支持annotation方式配置的基础，它包括了标准的JPA annotation以及Hibernate自身特殊功能的annotation。
+- hibernate-core是Hibernate的核心实现，提供了Hibernate所有的核心功能。
+- hibernate-entitymanager实现了标准的JPA，可以把它看成hibernate-core和JPA之间的适配器，它并不直接提供ORM的功能，而是对hibernate-core进行封装，使得Hibernate符合JPA的规范。
+
+
+
+
+
+------
 
 
 
@@ -2169,19 +2302,25 @@ Java提供ThreadLocal类来支持线程局部变量，是一种实现线程安�
 
 synchronized可以保证方法或者代码块在运行时，**同一时刻只有一个方法可以进入到临界区，**        **同时它还可以保证共享变量的内存可见性。**
 
+synchronized 是由JVM 实现的一种互斥同步的方式，通过字节码会发现被 synchronized 修饰的程序段会被 **monitorenter 和 monitorexit** 两个字节码指令包住。
+
 **Java中每一个对象都可以作为锁，这是synchronized实现同步的基础：**
 
 - 普通同步方法，锁是当前实例对象
 - 静态同步方法，锁是当前类的class对象
 - 同步方法块，锁是括号里面的对象
 
+###  **21.1 monitorenter 和 monitorexit 分别是什么意思**
+
+![image-20201025165212966](C:\Users\hp\Desktop\java面试题\img\image-20201025165212966.png)
+
 ### **22. synchronized 和 volatile 的区别是什么？**
 
 - volatile本质是在告诉jvm当前变量在寄存器（工作内存）中的值是不确定的，需要从主存中读取； synchronized则是锁定当前变量，只有当前线程可以访问该变量，其他线程被阻塞住。
-- volatile仅能使用在变量级别；synchronized则可以使用在变量、方法、和类级别的。
+- **volatile仅能使用在变量级别**；synchronized则可以使用在变量、方法、和类级别的。
 - volatile仅能实现变量的修改可见性，不能保证原子性；而synchronized则可以保证变量的**修改可见性和原子性。**
-- volatile不会造成线程的阻塞；synchronized可能会造成线程的阻塞。
-- volatile标记的变量不会被编译器优化；synchronized标记的变量可以被编译器优化
+- **volatile不会造成线程的阻塞**；synchronized可能会造成线程的阻塞。
+- **volatile标记的变量不会被编译器优化**；synchronized标记的变量可以被编译器优化
 
 ### **23.synchronized 和 Lock 有什么区别？**
 
@@ -2202,13 +2341,289 @@ synchronized是和if、else、for、while一样的**关键字**，**ReentrantLoc
 - ReentrantLock可以获取各种锁的信息
 - ReentrantLock可以灵活地实现多路通知 
 
-另外，二者的锁机制其实也是不一样的:**ReentrantLock底层调用的是Unsafe的park方法加锁，**synchronized操作的应该是对象头中mark word。
+**另外，二者的锁机制其实也是不一样的:**
 
-### **25.说一下 atomic 的原理？**
+- ReentrantLock底层调用的是Unsafe的park方法加锁，
+- synchronized操作的应该是对象头中mark word。
+
+### 25.Synchonized 和 ThreadLocal 的区别
+
+**相同点** 都用于解决多线程并发访问，防止任务在共享资源上产生冲突
+
+**不同点**： 
+
+- **Synchronized** 用于实现同步机制，是利用锁的机制使变量或代码块在某一时刻只能被一个线程访问，是一种 **以时间换空间** 的方式
+- **ThreadLocal** 为每一个线程都提供了变量的副本，使得每个线程在某一个时间访问到的并不是同一个对象，根除了对变量的共享，是一种 **以空间换时间**的方式
+
+### 25.1ThreadLocal 是怎么解决并发安全的
+
+ThreadLocal 为每一个线程维护变量的副本，把共享数据可见性范围限制在同一个线程内
+
+实现原理:  在ThreadLocal 里存在一个Map 用于存储每一个线程的变量的副本
+
+**一图胜千言**
+
+![image-20201025231741349](C:\Users\hp\Desktop\java面试题\img\image-20201025231741349.png)
+
+### 25.2Thread Local 需要注意什么
+
+要注意remove：
+
+ThreadLocal 的实现是基于一个所谓的 ThreadLocalMap ，在其中，它的key 是一个弱引用。
+
+通常弱引用都会和引用队列配合清理机制使用，但是 ThreadLocal 没有这么做
+
+这意味着，废弃项目的回收依赖于显示地触发，否则就要等待线程结束，进而回收相应 ThreadLocal ，这就是很多OOM 的来源。所以都会建议应用一定要自己负责 remove ，并且不要和线程池配合，因为worker 线程往往是不会退出的。
+
+### 26.JVM 对 Java 原生锁做了哪些优化
+
+![image-20201025170143406](C:\Users\hp\Desktop\java面试题\img\image-20201025170143406.png)
+
+![image-20201025170209568](C:\Users\hp\Desktop\java面试题\img\image-20201025170209568.png)
+
+### 27.为什么说 Synchronized 是非公平锁
+
+非公平主要表现在获取锁的行为上，并非是按照申请锁的时间前后，给等待线程分配锁，每当锁被释放后，任何一个线程都有机会竞争到锁，这样的目的是为了提高执行性能，缺点是可能会产生线程饥饿线像。
+
+### 28.什么是锁消除和锁粗化？
+
+**锁消除：**指虚拟机即时编译（JIT）在运行时，对一些代码上要求同步，但被检查到不可能存在共享数据竞争的锁进行消除。主要根据逃逸分析
+
+**锁粗化：**原则上，同步块的作用范围要尽量小。如果一系列的操作都对同一个对象反复加锁和解锁，甚至加锁操作在循环体内，频繁的进行互斥同步也会导致不必要的性能损耗。
+
+锁粗化实质就是增大锁的作用域
+
+### 29.CAS
+
+![image-20201025172628872](C:\Users\hp\Desktop\java面试题\img\image-20201025172628872.png)
+
+### 30.ABA问题、乐观锁的缺点
+
+![image-20201025172913644](C:\Users\hp\Desktop\java面试题\img\image-20201025172913644.png)
+
+### 31.AQS 问题
+
+AQS(abstract Queued Synchronizer)类是一个用来构建锁和同步器的框架，各种Lock 包中的锁(如ReentrantLock、ReadWriteLock)，以及其他如 Semaphore、CountDownLatch，甚至早期的FutureTask 等，都是基于AQS构建的
+
+![image-20201025202718404](C:\Users\hp\Desktop\java面试题\img\image-20201025202718404.png)
+
+### 32.ReentrantLock 是如何实现可重入性的？
+
+![image-20201025211622999](C:\Users\hp\Desktop\java面试题\img\image-20201025211622999.png)
+
+### 33.如何让 Java 的线程彼此同步？ 
+
+JUC 同步器的三个主要成员：CountSownLatch、CyclicBarrier和 Semaphore
+
+![image-20201025212038929](C:\Users\hp\Desktop\java面试题\img\image-20201025212038929.png)
+
+
+
+![image-20201025212129600](C:\Users\hp\Desktop\java面试题\img\image-20201025212129600.png)
+
+```java
+public class TestCyclicBarrier{
+    private CyclicBarrier cyclicbarrier= new CyclicBarrier(5);
+    
+    public static void main(String [] args){
+        new TestCyclicBarrier().begin();
+    }
+    
+    public void begin(){
+        for(int i =0;i< 5; i++){
+            new Thread(new Student()).start();
+        }
+    }
+    static class Student implements Runnable{
+        @Override
+        public void run(){
+            try{
+                Thread.sleep(2000);//正在前往饭店的路上
+                cyclicBarrier.await();//到了就等着，等其他人都到了
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+}
+```
+
+![image-20201025213335772](C:\Users\hp\Desktop\java面试题\img\image-20201025213335772.png)
+
+```java
+public class TestSemaphore {
+    public static void main(String[] args) {
+        //5台机器  即5个许可证
+        Semaphore semaphore = new Semaphore(5);
+        for (int worker = 0; worker < 8; worker++) {
+            new Worker(worker, semaphore).start();
+        }
+    }
+
+    static class Worker extends Thread {
+        private int num;
+        private Semaphore semaphore;
+
+        public Worker(int num, Semaphore semaphore) {
+            this.num = num;
+            this.semaphore = semaphore;
+        }
+
+        @Override
+        public void run() {
+            try {
+                semaphore.acquire();//抢许可
+                System.out.println(num+"");
+                Thread.sleep(2000);
+                System.out.println("释放");
+                semaphore.release();//释放许可
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+```
+
+![image-20201025214752590](C:\Users\hp\Desktop\java面试题\img\image-20201025214752590.png)
+
+### 34.CountDownLatch、CyclicBarrier区别
+
+CyclicBarrier：生活中的例子，咱们三个人明天中午食堂碰面，都到齐后，商量下火锅吃油碟还是麻酱
+
+**作用不同：**CyclicBarrier 要等固定数量的线程都到达了栅栏位置才能继续执行，而.CountDownLatch 只需等待数字到0.	
+
+CountDownLatch 用于事件，而CyclicBarrier 用于线程
+
+**可用性不同**：CountDownLatch在倒数到0时出发门闩打开后，不能在次使用了。除非创建新的实例。而CyclicBarrier 可以重复使用
+
+### 35.Java中的线程池是如何实现的
+
+![image-20201025215831277](C:\Users\hp\Desktop\java面试题\img\image-20201025215831277.png)
+
+### 36.创建线程池的几个核心构造参数？
+
+![image-20201025220003379](C:\Users\hp\Desktop\java面试题\img\image-20201025220003379.png)
+
+### 37.线程池中线程是怎么创建的？
+
+![image-20201025220226597](C:\Users\hp\Desktop\java面试题\img\image-20201025220226597.png)
+
+### 38.线程池的异同
+
+**SingleThreadExecutor 线程池**
+
+- 只有一个核心线程在工作，相当于单线程执行所有任务。
+- 如果这唯一一个线程因为异常结束，那么会有一个新的线程来替代它。
+- 此线程保证所有任务的执行顺序按照任务的提交顺序执行
+
+![image-20201025220928875](C:\Users\hp\Desktop\java面试题\img\image-20201025220928875.png)
+
+**FixedThreadPool 线程池**
+
+- 是一个固定大小的线程池，只有核心线程
+- 每次提交一个任务就创建一个线程，直到线程达到线程池的最大大小。
+- 线程池一旦达到最大值就保持不变，如果某个线程因为执行异常而结束，那么线程池会补充一个新线程
+- 多用于一些很稳定、很固定的正规并发线程，多用于服务器
+
+![image-20201025221331258](C:\Users\hp\Desktop\java面试题\img\image-20201025221331258.png)
+
+**CachedThreadPool 线程池**
+
+- 无界线程池，如果线程池的大小超过了处理任务所需要的线程，那么就会回收部分空闲（60秒不执行的任务）线程，当任务数增加时，此线程又可以智能的添加新线程来处理任务
+- 线程池的大小完全依赖于操作系统能够创建的最大线程大小。
+- SynchronousQueue 是一个缓冲区为 1 的阻塞队列
+- 通常用于执行一些生存期很短的异步性任务，因此一些面向连接的daemon 型 Server 中用的不多
+
+![image-20201025223921114](C:\Users\hp\Desktop\java面试题\img\image-20201025223921114.png)
+
+**ScheduledThreadPool 线程池**
+
+- 核心线程池固定，大小无限的线程池。
+- 此线程支持定时以及周期性执行任务的需求
+- 创建一个周期性执行的线程池
+- 如果闲置，非线程池会在 DEFAULT_KEEPALIVEMILLIS 时间内回收
+
+![image-20201025224310950](C:\Users\hp\Desktop\java面试题\img\image-20201025224310950.png)
+
+### 39.线程池的数量该设置为多少合适？
+
+![image-20201025220612824](C:\Users\hp\Desktop\java面试题\img\image-20201025220612824.png)
+
+### 40.如何在线程池中提交线程
+
+![image-20201025224415006](C:\Users\hp\Desktop\java面试题\img\image-20201025224415006.png)
+
+### 41.什么是Java 内存模型
+
+![image-20201025225027771](C:\Users\hp\Desktop\java面试题\img\image-20201025225027771.png)
+
+### 42todo.锁的升、降级
+
+### 43.volatile 有什么特点，为什么它能保证变量对所有的线程可见性
+
+volatile 是 Java 虚拟机提供的轻量级的同步机制。
+
+当一个变量被volatile 修饰
+
+- 保证变量被所有线程的可见性。当一条线程修改了这个变量的值，新的值对于其他线程是可以立即得知的。
+- 禁止指令重排序优化： 普通变量仅仅能保证在该方法执行过程中，得到正确结果，但是不能保证程序代码的执行顺序。
+
+### 44.Java 内存模型定义的8 种内存间操作
+
+![image-20201025225859283](C:\Users\hp\Desktop\java面试题\img\image-20201025225859283.png)
+
+### 45.volatile是否可以保证并发安全
+
+不可以。虽然volatile 保证了一致性但是 java 里面的运算并非是原子操作，导致了volatile 在并发下是不安全的。
+
+### 46.说一下 atomic 的原理？
 
 Atomic包中的类基本的特性就是在多线程环境下，当有多个线程同时对单个（包括基本类型及引用类型）变量进行操作时，具有排他性，**即当多个线程同时对该变量的值进行更新时，仅有一个线程能成功，**而未成功的线程可以向**自旋锁一样，继续尝试，一直等到执行成功。**
 
 Atomic系列的类中的核心方法都会调用unsafe类中的几个本地方法。我们需要先知道一个东西就是Unsafe类，**全名为：sun.misc.Unsafe**，这个类包含了大量的对C代码的操作，包括很多直接内存分配以及原子操作的调用，而它之所以标记为非安全的，是告诉你这个里面大量的方法调用都会存在安全隐患，需要小心使用，否则会导致严重的后果，例如在通过unsafe分配内存的时候，如果自己指定某些区域可能会导致一些类似C++一样的指针越界到其他进程的问题。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## ⭐RabbitMQ⭐
 
