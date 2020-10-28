@@ -995,47 +995,28 @@ home接口是EJB工厂用于创建和移除查找EJB实例
 - Spring MVC 是一个精心设计的WEB 框架
 - Spring 提供了一个便捷的事务管理接口，使用于小型的本地事务处理
 
-###  **2.解释一下什么是 aop？**
+### 2.谈谈你对IoC 和AOP 的理解
 
-AOP（Aspect-Oriented Programming，面向切面编程），可以说是OOP（Object-Oriented Programing，面向对象编程）的补充和完善。OOP引入封装、继承和多态性等概念来建立一种对象层次结构，用以模拟公共行为的一个集合。
+**IoC**（inverse of control）控制反转，是一种设计思想，就是将原本程序中手动创建(、初始化、销毁) 的对象交给Spring框架来管理。
 
-**当我们需要为分散的对象引入公共行为的时候，OOP则显得无能为力。**也就是说，OOP允许你定义从上到下的关系，但并不适合定义从左到右的关系。例如日志功能。日志代码往往水平地散布在所有对象层次中，而与它所散布到的对象的核心功能毫无关系。对于其他类型的代码，如安全性、异常处理和透明的持续性也是如此。**这种散布在各处的无关的代码被称为横切（cross-cutting）代码，**在OOP设计中，它导致了大量代码的重复，而不利于各个模块的重用。
+IoC就像一个工厂，当我们需要使用一个对象的时候，只需要配置好注解/文件即可，完全不用考虑是如何被创建出来的。
 
-而**AOP技术则恰恰相反**，它利用一种称为“横切”的技术，剖解开封装的对象内部，并将那些影响了多个类的公共行为封装到**一个可重用模块**，并将其名为“Aspect”，即切面。所谓“切面”，简单地说，就是将那些与业务无关，却为业务模块所共同调用的逻辑或责任封装起来，
+**AOP**:面向切面编程，能够将那些与业务无关却又通用的功能（例如事务处理，日志管理，权限控制等）封装起来，降低代码的耦合性，增加可扩展性和可维护性。
 
-**便于减少系统的重复代码，降低模块间的耦合度**，并有利于未来的可操作性和可维护性。
+spring AOP 是基于动态代理的，如果要代理的对象实现了接口，那么使用 JDK Proxy,去创建代理对象，对没有实现接口的对象，这时会使用Cglib
 
-AOP代表的是一个横向的关系，如果说“对象”是一个空心的圆柱体，其中封装的是对象的属性和行为；那么面向方面编程的方法，就仿佛一把利刃，将这些空心圆柱体剖开，以获得其内部的消息。而剖开的切面，也就是所谓的“方面”了。然后它又以巧夺天功的妙手将这些剖开的切面复原，不留痕迹。
+![image-20201028221426803](C:\Users\hp\Desktop\java面试题\img\image-20201028221426803.png)
 
-使用“横切”技术，AOP把软件系统分为两个部分：**核心关注点和横切关注点**。业务处理的主要流程是核心关注点，与之关系不大的部分是横切关注点。横切关注点的一个特点是，他们经常发生在核心关注点的多处，而各处都基本相似。比如权限认证、日志、事务处理。Aop 的作用在于分离系统中的各种关注点，将核心关注点和横切关注点分离开来。正如Avanade公司的高级方案构架师Adam Magee所说，AOP的核心思想就是“将应用程序中的商业逻辑同对其提供支持的通用服务进行分离。”
+### 3.Spring AOP 和 AspectJ AOP 有什么区别？
 
-### **3.解释一下什么是 ioc？**
+Spring AOP 属于运⾏时增强，⽽ AspectJ 是编译时增强。 Spring AOP 基于代理(Proxying)，⽽AspectJ 基于字节码操作(Bytecode Manipulation)。
 
-IOC是Inversion of Control的缩写，多数书籍翻译成“**控制反转”。**
+Spring AOP 已经集成了 AspectJ ，AspectJ 应该算的上是 Java ⽣态系统中最完整的 AOP 框架了。
 
-**IOC:把对象的创建、初始化、销毁交给Spring来管理，而不是由开发者控制，实现了控制反转**
+AspectJ 相⽐于 Spring AOP 功能更加强⼤，但是 Spring AOP 相对来说更简单，
+如果我们的切⾯⽐较少，那么两者性能差异不⼤。
 
-1996年，Michael Mattson在一篇有关探讨面向对象框架的文章中，首先提出了IOC 这个概念。对于面向对象设计及编程的基本思想，前面我们已经讲了很多了，不再赘述，简单来说就是把复杂系统分解成相互合作的对象，这些对象类通过封装以后，内部实现对外部是透明的，从而降低了解决问题的复杂度，而且可以灵活地被重用和扩展。　
-
-IOC理论提出的观点大体是这样的：**借助于“第三方”实现具有依赖关系的对象之间的解耦。如下图：**
-
-![image-20201010120431346](C:\Users\hp\Desktop\java面试题\img\image-20201010120431346.png)
-
-大家看到了吧，由于引进了中间位置的“第三方”，也就是IOC容器，使得A、B、C、D这4个对象没有了耦合关系，齿轮之间的传动全部依靠“第三方”了，全部对象的控制权全部上缴给“第三方”IOC容器，所以，IOC容器成了整个系统的关键核心，它起到了一种类似“粘合剂”的作用，把系统中的所有对象粘合在一起发挥作用，如果没有这个“粘合剂”，对象与对象之间会彼此失去联系，这就是有人把IOC容器比喻成**“粘合剂”的由来。**
-
-我们再来做个试验：把上图中间的IOC容器拿掉，然后再来看看这套系统：
-
-![image-20201010120450165](C:\Users\hp\Desktop\java面试题\img\image-20201010120450165.png)
-
-我们现在看到的画面，就是我们要实现整个系统所需要完成的全部内容。这时候，A、B、C、D这4个对象之间已经没有了耦合关系，彼此毫无联系，这样的话，当你在实现A的时候，根本无须再去考虑B、C和D了，对象之间的依赖关系已经降低到了最低程度。所以，如果真能实现IOC容器，对于系统开发而言，这将是一件多么美好的事情，参与开发的每一成员只要实现自己的类就可以了，跟别人没有任何关系！
-
-**我们再来看看，控制反转(IOC)到底为什么要起这么个名字？我们来对比一下：**
-
-软件系统在没有引入IOC容器之前，如图1所示，对象A依赖于对象B，那么对象A在初始化或者运行到某一点的时候，自己必须主动去创建对象B或者使用已经创建的对象B。无论是创建还是使用对象B，控制权都在自己手上。
-
-软件系统在引入IOC容器之后，这种情形就完全改变了，如图3所示，由于IOC容器的加入，对象A与对象B之间失去了直接联系，所以，当对象A运行到需要对象B的时候，IOC容器会主动创建一个对象B注入到对象A需要的地方。
-
-通过前后的对比，我们不难看出来**：对象A获得依赖对象B的过程,由主动行为变为了被动行为，控制权颠倒过来了，这就是“控制反转”这个名称的由来。**
+但是，当切⾯太多的话，最好选择 AspectJ ，它⽐Spring AOP 快很多。
 
 ### **4.spring 常用的注入方式有哪些？**
 
@@ -1045,9 +1026,16 @@ Spring通过DI（依赖注入）实现IOC（控制反转），常用的注入方
 2. setter注入
 3. 基于注解的注入
 
-### **5.spring 中的 bean 是线程安全的吗？**
+### 5.Spring 中的单例 bean 的线程安全问题了解吗？
 
-Spring容器中的Bean是否线程安全，容器本身并没有提供Bean的线程安全策略，因此可以说spring容器中的Bean本身不具备线程安全的特性，但是具体还是要结合具体scope的Bean去研究。
+⼤部分时候我们并没有在系统中使⽤多线程，所以很少有⼈会关注这个问题。
+
+单例 bean 存在线程问题，主要是因为当多个线程操作同⼀个对象的时候，对这个对象的⾮静态成员变量的写操作会存在线程安全问题。
+
+**常⻅的有两种解决办法：**
+
+1. 在Bean对象中尽量避免定义可变的成员变量（不太现实）。
+2. 在类中定义⼀个ThreadLocal成员变量，将需要的可变成员变量保存在 ThreadLocal 中（推荐的⼀种⽅式）。
 
 ### **6.spring 支持几种 bean 的作用域？**
 
@@ -1093,6 +1081,28 @@ Spring容器负责创建应用程序中的bean同时通过ID来协调这些对�
 - 幻读：事务A 按照一定条件进行数据读取， 期间事务B 插入了相同搜索条件的新数据，事务A再次按照原先条件进行读取时，发现了事务B 新插入的数据 称为幻读
 
 - 不可重复读：比方说在同一个事务中先后执行两条一模一样的select语句，期间在此次事务中没有执行过任何DDL语句，但先后得到的结果不一致，这就是不可重复读。
+
+![image-20201028225735587](C:\Users\hp\Desktop\java面试题\img\image-20201028225735587.png)
+
+### 10.Spring 事务中哪⼏种事务传播⾏为?
+
+propagation  n. 传播；繁殖；增殖 
+
+![image-20201028230206919](C:\Users\hp\Desktop\java面试题\img\image-20201028230206919.png)
+
+![image-20201028230347970](C:\Users\hp\Desktop\java面试题\img\image-20201028230347970.png)
+
+### 11.@Transactional(rollbackFor = Exception.class)注解了解吗？
+
+我们知道：Exception分为运⾏时异常 RuntimeException和⾮运⾏时异常。
+
+事务管理对于企业应⽤来说是⾄关重要的，即使出现异常情况，它也可以保证数据的⼀致性。
+
+当 @Transactional 注解作⽤于类上时，**该类的所有 public ⽅法将都具有该类型的事务属性**，同时，我们也可以在⽅法级别使⽤该标注来覆盖类级别的定义。
+
+如果类或者⽅法加了这个注解，那么这个类⾥⾯的⽅法抛出异常，就会回滚，数据库⾥⾯的数据也会回滚。
+
+在 @Transactional 注解中如果不配置 rollbackFor 属性,那么事物只会在遇到 **RuntimeException 的时候才会回滚**,加上 rollbackFor=Exception.class ,**可以让事物在遇到⾮运⾏时异常时也回滚。**
 
 ###  14.BeanFactory、FactoryBean 和 ApplicationContext 的区别
 
@@ -1186,6 +1196,24 @@ spring 框架提供了以下4种方式来管理bean 的声明周期事件
 
 ![image-20201024223349455](C:\Users\hp\Desktop\java面试题\img\image-20201024223349455.png)
 
+### 26.@Component 和 @Bean 的区别是什么？
+
+1. 作⽤对象不同:  **@Component 注解作⽤于类**，⽽ @Bean 注解作⽤于⽅法。
+
+2.  @Component 通常是通过类路径扫描来⾃动侦测以及⾃动装配到Spring容器中（我们可以使⽤@ComponentScan 注解定义要扫描的路径从中找出标识了需要装配的类⾃动装配到 Spring 的bean 容器中）。
+
+ @Bean 注解通常是我们在标有该注解的⽅法中定义产⽣这个 bean, @Bean 告诉了Spring这是某个类的示例，当我需要⽤它的时候还给我。
+
+3. @Bean 注解⽐  Component 注解的⾃定义性更强，⽽且很多地⽅我们只能通过  @Bean 注解来注册bean。⽐如当我们引⽤第三⽅库中的类需要装配到  Spring 容器时，则只能通过@Bean 来实现。
+
+### 27.Spring 中的 bean ⽣命周期?
+
+![image-20201028222717127](C:\Users\hp\Desktop\java面试题\img\image-20201028222717127.png)
+
+![image-20201028222734581](C:\Users\hp\Desktop\java面试题\img\image-20201028222734581.png)
+
+![image-20201028222831174](C:\Users\hp\Desktop\java面试题\img\image-20201028222831174.png)
+
 ## ⭐Spring MVC⭐
 
 ![image-20201024224058438](C:\Users\hp\Desktop\java面试题\img\image-20201024224058438.png)
@@ -1198,32 +1226,20 @@ spring 框架提供了以下4种方式来管理bean 的声明周期事件
 
 **Spring MVC运行流程图：**
 
-![image-20201010123810046](C:\Users\hp\Desktop\java面试题\img\image-20201010123810046.png)
+![image-20201028223142067](C:\Users\hp\Desktop\java面试题\img\image-20201028223142067.png)
 
 **Spring运行流程描述：**
 
-1. 用户向服务器发送请求，请求被Spring 前端控制Servelt DispatcherServlet捕获；
+1. 客户端发送请求，直接请求到DispatcherServlet
+2. DispatcherServlet 根据请求信息调用 HandlerMapping，解析请求对应的handler
+3. 解析对应的 handler (也就是我们平常说的Conroller 控制器)后，开始由 HandlerAdapter 适配器处理
+4. HandlerAdapter 根据对应的handler 来调用真正的处理器请求，并处理相应的业务逻辑
+5. 处理完业务逻辑后，返回一个ModelAndView 对象 Model 是数据上的对象， view是逻辑上的 view
+6. viewResolver 根据view 查找实际的view 
+7. DispatcherServlet 会把 model 传给 View（渲染）
+8. 把 view 传给浏览器（请求者）
 
-2. DispatcherServlet对请求URL进行解析，得到请求资源标识符（URI）。然后根据该URI，调用HandlerMapping获得该Handler配置的所有相关的对象（包括Handler对象以及Handler对象对应的拦截器），最后以HandlerExecutionChain对象的形式返回；
 
-3. DispatcherServlet 根据获得的Handler，选择一个合适的HandlerAdapter；（附注：如果成功获得HandlerAdapter后，此时将开始执行拦截器的preHandler(...)方法）
-
-4. 提取Request中的模型数据，填充Handler入参，开始执行Handler（Controller)。 在填充Handler的入参过程中，根据你的配置，Spring将帮你做一些额外的工作：
-
-- HttpMessageConveter： 将请求消息（如Json、xml等数据）转换成一个对象，将对象转换为指定的响应信息
-- 数据转换：对请求消息进行数据转换。如String转换成Integer、Double等
-- 数据格式化：对请求消息进行数据格式化。 如将字符串转换成格式化数字或格式化日期等
-- 数据验证： 验证数据的有效性（长度、格式等），验证结果存储到BindingResult或Error中
-
-5. Handler执行完成后，向DispatcherServlet 返回一个ModelAndView对象；
-
-6. 根据返回的ModelAndView，选择一个适合的ViewResolver（必须是已经注册到Spring容器中的ViewResolver)返回给DispatcherServlet ；
-
-7. ViewResolver 结合Model和View，来渲染视图；
-
-8. 将渲染结果返回给客户端。
-
-![image-20201024224359387](C:\Users\hp\Desktop\java面试题\img\image-20201024224359387.png)
 
 ![image-20201024224842475](C:\Users\hp\Desktop\java面试题\img\image-20201024224842475.png)
 
@@ -1314,6 +1330,16 @@ RequestMapping是一个用来处理请求地址映射的注解，可用于类或
 	</filter-mapping>
 
 ```
+
+### 14.@RestController和 Controller
+
+Controller 返回⼀个⻚⾯单独使⽤  @Controller 不加  @ResponseBody 的话⼀般使⽤在要返回⼀个视图的情况，这种情况属于⽐较传统的**Spring MVC 的应⽤，对应于前后端不分离的情况。**
+
+![image-20201028220120361](C:\Users\hp\Desktop\java面试题\img\image-20201028220120361.png)
+
+@RestController **返回 JSON 或 XML 形式数据**但 @RestController 只返回对象，对象数据直接以 JSON 或 XML 形式写⼊ HTTP 响应(Response)中，这种情况属于 RESTful Web服务，这也是⽬前⽇常开发所接触的最常⽤的情况**（前后端离）。**
+
+![image-20201028220157645](C:\Users\hp\Desktop\java面试题\img\image-20201028220157645.png)
 
 ## ⭐Spring boot⭐
 
@@ -1617,7 +1643,36 @@ Mybatis有三种基本的执行器（Executor）：
 - hibernate-core是Hibernate的核心实现，提供了Hibernate所有的核心功能。
 - hibernate-entitymanager实现了标准的JPA，可以把它看成hibernate-core和JPA之间的适配器，它并不直接提供ORM的功能，而是对hibernate-core进行封装，使得Hibernate符合JPA的规范。
 
+### 23.如何使⽤JPA在数据库中⾮持久化⼀个字段？
 
+```java
+Entity(name="USER")
+public class User {
+
+@Id
+@GeneratedValue(strategy = GenerationType.AUTO)
+@Column(name = "ID")
+private Long id;
+
+@Column(name="USER_NAME")
+private String userName;
+
+@Column(name="PASSWORD")
+private String password;
+
+private String secrect;
+}
+```
+
+如果我们想让 secrect 这个字段不被持久化，也就是不被数据库存储怎么办？我们可以采⽤下⾯⼏种⽅法：
+
+```java
+static String transient1; // not persistent because of static
+final String transient2 = “Satish”; // not persistent because of final
+transient String transient3; // not persistent because of transient
+@Transient
+String transient4; // not persistent because of @Transient
+```
 
 
 
