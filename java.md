@@ -1518,38 +1518,50 @@ Hystrix 是一个延迟和容错库，指在隔离远程系统，服务和第三
 
 ## ⭐Mybatis⭐
 
-### **1.mybatis 中 #{}和 ${}的区别是什么？**
+### **1. #{}和 ${}的区别是什么？**
 
 - \#{}是预编译处理，${}是字符串替换；
 - Mybatis在处理#{}时，会将sql中的#{}替换为?号，调用PreparedStatement的set方法来赋值；
 - Mybatis在处理${}时，就是把${}替换成变量的值；
 - 使用#{}可以有效的防止SQL注入，提高系统安全性。
 
-### 2.mybatis 有几种分页方式？
+### 2.Mybatis分页
+
+#### 1.mybatis 有几种分页方式？
 
 - 数组分页
 - sql分页
-- 拦截器分页
-- RowBounds分页
+- **拦截器分页**(物理分页)： 分⻚插件的基本原理是使⽤ Mybatis 提供的插件接⼝，实现⾃定义插件，在插件的拦截⽅法内拦截待执⾏的 sql，然后重写 sql，根据 dialect ⽅⾔，添加对应的物理分⻚语句和物理分⻚参数。
+- **RowBounds分页**(逻辑分页)： 针对ResultSet 结果集执行的内存分页，而非物理分页
 
-### **3.mybatis 逻辑分页和物理分页的区别是什么？**
+#### **2.mybatis 逻辑分页和物理分页的区别是什么？**
 
 - 物理分页速度上并不一定快于逻辑分页，逻辑分页速度上也并不一定快于物理分页。
 - 物理分页总是优于逻辑分页：没有必要将属于数据库端的压力加诸到应用端来，就算速度上存在优势,然而其它性能上的优点足以弥补这个缺点。
 
-### **4.mybatis 是否支持延迟加载？延迟加载的原理是什么？**
+#### 3.简述 Mybatis 的插件运⾏原理，以及如何编写⼀个插件。
+
+答：Mybatis 仅可以编写针对ParameterHandler 、 ResultSetHandler 、 StatementHandler 、 Executor 这 4 种接⼝的插件，**Mybatis 使⽤ JDK 的动态代理**，为需要拦截的接⼝⽣成代理对象以实现接⼝⽅法拦截功能，每当执⾏这 4 种接⼝对象的⽅法时，就会进⼊拦截⽅法，具体就是  InvocationHandler 的invoke() ⽅法，当然，只会拦截那些你指定需要拦截的⽅法。
+
+实现 Mybatis 的 Interceptor 接⼝并复写 intercept() ⽅法，然后在给插件编写注解，指定要拦截哪⼀个接⼝的哪些⽅法即可，记住，别忘了在配置⽂件中配置你编写的插件。
+
+#### 4.mybatis 分页插件的实现原理是什么？
+
+分页插件的基本原理是使用Mybatis提供的插件接口，实现自定义插件，在插件的拦截方法内拦截待执行的sql，然后重写sql，根据dialect方言，添加对应的物理分页语句和物理分页参数
+
+### 3.延迟加载、缓存
+
+#### **1.mybatis 是否支持延迟加载？延迟加载的原理是什么？**
 
 Mybatis**仅支持association关联对象**和**collection关联集合对象**的延迟加载，
 
-association指的就是一对一，collection指的就是一对多查询。
-
-在Mybatis配置文件中，可以配置是否启用延迟加载**lazyLoadingEnabled=true|false**。
+association指的就是一对一，collection指的就是一对多查询。在Mybatis配置文件中，可以配置是否启用延迟加载**lazyLoadingEnabled=true|false**。
 
 它的原理是，使用CGLIB创建目标对象的代理对象，当调用目标方法时，进入拦截器方法，比如调用a.getB().getName()，拦截器invoke()方法发现a.getB()是null值，那么就会单独发送事先保存好的查询关联B对象的sql，把B查询上来，然后调用a.setB(b)，于是a的对象b属性就有值了，接着完成a.getB().getName()方法的调用。这就是延迟加载的基本原理。
 
 当然了，不光是Mybatis，几乎所有的包括Hibernate，支持延迟加载的原理都是一样的。
 
-### **5.说一下 mybatis 的一级缓存和二级缓存？**
+#### **2.说一下 mybatis 的一级缓存和二级缓存？**
 
 一级缓存: 基于 PerpetualCache 的 HashMap 本地缓存，其存储作用域为 Session，当 Session flush 或 close 之后，该 Session 中的所有 Cache 就将清空，默认打开一级缓存。
 
@@ -1559,7 +1571,19 @@ association指的就是一对一，collection指的就是一对多查询。
 
 对于缓存数据更新机制，当某一个作用域(一级缓存 Session/二级缓存Namespaces)的进行了C/U/D 操作后，默认该作用域下所有 select 中的缓存将被 clear。
 
-### **6.mybatis 和 hibernate 的区别有哪些？**
+### 4.批处理
+
+#### 1.Mybatis 中如何执行批处理
+
+使用BatchExecutor 完成批处理
+
+#### 2.Mybatis 执⾏批量插⼊，能返回数据库主键列表吗？
+
+答：能，JDBC 都能，Mybatis 当然也能。
+
+
+
+### **5.mybatis 和 hibernate 的区别有哪些？**
 
 （1）Mybatis和hibernate不同，它不完全是一个ORM框架，因为MyBatis需要程序员自己编写Sql语句。
 
@@ -1567,66 +1591,124 @@ association指的就是一对一，collection指的就是一对多查询。
 
 （3）Hibernate对象/关系映射能力强，数据库无关性好，对于关系模型要求高的软件，如果用hibernate开发可以节省很多代码，提高效率。 
 
-### **7.mybatis 有哪些执行器（Executor）？**
+### 6.Mybatis执行器
+
+#### **1.mybatis 有哪些执行器（Executor）？**
 
 Mybatis有三种基本的执行器（Executor）：
 
 1. **SimpleExecutor**：每执行一次update或select，就开启一个Statement对象，用完立刻关闭Statement对象。
 2. **ReuseExecutor**：执行update或select，以sql作为key查找Statement对象，存在就使用，不存在就创建，**用完后，不关闭Statement对象**，而是放置于Map内，供下一次使用。简言之，就是重复使用Statement对象。
-3. **BatchExecutor**：执行update（没有select，JDBC批处理不支持select），将所有sql都添加到批处理中（addBatch()），等待统一执行（executeBatch()），它缓存了多个Statement对象，每个Statement对象都是addBatch()完毕后，等待逐一执行executeBatch()批处理。与JDBC批处理相同。
+3. **BatchExecutor**：执行update（没有select，JDBC批处理不支持select），将所有sql都添加到批处理中（addBatch()），等待**统一执行**（executeBatch()），它缓存了多个Statement对象，每个Statement对象都是addBatch()完毕后，等待逐一执行executeBatch()批处理。与JDBC批处理相同。
 
-### **8.mybatis 分页插件的实现原理是什么？**
+#### 2.Mybatis 中如何指定使⽤哪⼀种 Executor 执⾏器？
 
-分页插件的基本原理是使用Mybatis提供的插件接口，实现自定义插件，在插件的拦截方法内拦截待执行的sql，然后重写sql，根据dialect方言，添加对应的物理分页语句和物理分页参数
+在 Mybatis 配置⽂件中，可以指定默认的 ExecutorType 执⾏器类型，也可以⼿动给
+DefaultSqlSessionFactory 的创建 SqlSession 的⽅法传递 ExecutorType 类型参数。.
 
-### 9.动态SQL
+### 7.动态SQL
 
-![image-20201024230923844](C:\Users\hp\Desktop\java面试题\img\image-20201024230923844.png)
+#### Mybatis 动态 sql 是做什么的？都有哪些动态 sql？能简述⼀下动态 sql 的执⾏原理不？
 
-![image-20201024230946585](C:\Users\hp\Desktop\java面试题\img\image-20201024230946585.png)
+答：Mybatis 动态 sql 可以让我们在 Xml 映射⽂件内，以标签的形式编写动态 sql，完成逻辑判断和动态拼接 sql 的功能，Mybatis 提供了 9 种动态 sql 标签
+trim|where|set|foreach|if|choose|when|otherwise|bind 。
 
-### 10.半自动ORM与Hibernate 区别
+其执⾏原理为，使⽤ OGNL 从sql 参数对象中计算表达式的值，根据表达式的值动态拼接 sql，以此来完成动态 sql 的功能。
 
-![image-20201024231100766](C:\Users\hp\Desktop\java面试题\img\image-20201024231100766.png)
+### 8.Mybatis 是如何将 sql 执⾏结果封装为⽬标对象并返回的？都有哪些映射形式？
 
-### 11.简述Mybatis 的XML 映射文件和Mybatis 内部数据结构之间的映射关系
+第⼀种是使⽤ <resultMap> 标签，逐⼀定义列名和对象属性名之间的映射关系。
 
-![image-20201024231654694](C:\Users\hp\Desktop\java面试题\img\image-20201024231654694.png)
+第⼆种是使⽤sql 列的别名功能，将列别名书写为对象属性名，⽐如 T_NAME AS NAME，对象属性名⼀般是 name，⼩写，但是列名不区分⼤⼩写，**Mybatis 会忽略列名⼤⼩写**，智能找到与之对应对象属性名，你甚⾄可以写成 T_NAME AS NaMe，Mybatis ⼀样可以正常⼯作。
+
+有了列名与属性名的映射关系后，Mybatis 通过反射创建对象，同时使⽤反射给对象的属性逐⼀赋值并返回，那些找不到映射关系的属性，是⽆法完成赋值的。.
+
+### 9.Mybatis 有几种查询方式？各有什么区别？
+
+#### 1.MyBatis 实现一对一有几种方式
+
+![image-20201025093907631](C:\Users\hp\Desktop\java面试题\img\image-20201025093907631.png)
+
+#### 2.Mybatis 能执⾏⼀对⼀、⼀对多的关联查询吗？都有哪些实现⽅式，以及它们之间的区别。
+
+**能，**Mybatis 不仅可以执⾏⼀对⼀、⼀对多的关联查询，还可以执⾏多对⼀，多对多的关联查询，多对⼀查询，其实就是⼀对⼀查询，只需要把  selectOne() 修改为  selectList() 即可；多对多查询，其实就是⼀对多查询，只需要把  selectOne() 修改为  selectList() 即可。
+
+关联对象查询，有两种实现⽅式，⼀种是单独发送⼀个 sql 去查询关联对象，赋给主对象，然后返回主对象。
+
+另⼀种是使⽤嵌套查询，嵌套查询的含义为使⽤ join 查询，⼀部分列是 A 对象的属性值，另外⼀部分列是关联对象 B 的属性值，好处是只发⼀个 sql 查询，就可以把主对象和其关联对象查出来。
+
+那么问题来了，join 查询出来 100 条记录，如何确定主对象是 5 个，⽽不是 100 个？其去重复的原理是 <resultMap> 标签内的 <id> ⼦标签，指定了唯⼀确定⼀条记录的 id 列，Mybatis 根据列值来完成 100 条记录的去重复功能， <id> 可以有多个，代表了联合主键的语意。
+
+同样主对象的关联对象，也是根据这个原理去重复的，尽管⼀般情况下，只有主对象会有重复记录，关联对象⼀般不会重复。
+
+举例：下⾯ join 查询出来 6 条记录，⼀、⼆列是 Teacher 对象列，第三列为 Student 对象列，
+Mybatis 去重复处理后，结果为 1 个⽼师 6 个学⽣，⽽不是 6 个⽼师 6 个学⽣。
+t_id t_name s_id
+| 1 | teacher | 38 | | 1 | teacher | 39 | | 1 | teacher | 40 | | 1 | teacher | 41 | | 1 |
+teacher | 42 | | 1 | teacher | 43 |
+
+### 11.映射文件
+
+#### 1.简述Mybatis 的XML 映射文件和Mybatis 内部数据结构之间的映射关系
+
+答：Mybatis 将所有 Xml 配置信息都封装到 All-In-One 重量级对象 Configuration 内部。
+
+在 Xml映射⽂件中， <parameterMap> 标签会被解析为  ParameterMap 对象，其每个⼦元素会被解析为ParameterMapping 对象。
+
+ <resultMap> 标签会被解析为  ResultMap 对象，其每个⼦元素会被解析为  ResultMapping 对象。
+
+每⼀个 <select>、<insert>、<update>、<delete> 标签均会被解析为  MappedStatement 对象，标签内的 sql 会被解析为 BoundSql 对象。
 
 ![image-20201024231828202](C:\Users\hp\Desktop\java面试题\img\image-20201024231828202.png)
 
 ![image-20201024231900065](C:\Users\hp\Desktop\java面试题\img\image-20201024231900065.png)
 
-### 12.MyBatis 实现一对一有几种方式
+#### 2.不同的Xml 映射文件，id 是否可以重复
 
-![image-20201025093907631](C:\Users\hp\Desktop\java面试题\img\image-20201025093907631.png)
+不同的 Xml 映射⽂件，如果配置了 namespace，那么 id 可以重复；如果没有配namespace，
+那么 id 不能重复；
 
-### 13.Mybatis 是如何将sql 执行结果封装为目标对象并返回的
+毕竟 namespace 不是必须的，只是最佳实践⽽已。原因就是 namespace+id 是作为  Map<String, MappedStatement> 的 key 使⽤的，如果没有namespace，就剩下 id，那么，id 重复会导致数据互相覆盖。
 
-![image-20201025094114073](C:\Users\hp\Desktop\java面试题\img\image-20201025094114073.png)
+有了 namespace，⾃然 id 就可以重复，namespace 不同，namespace+id ⾃然也就不同。
+
+#### 3.Xml 映射⽂件中，除了常⻅的 select|insert|updae|delete 标签之外，还有哪些标签？
+
+答：还有很多其他的标
+签， <resultMap> 、 <parameterMap> 、 <sql> 、 <include> 、 <selectKey> ，加上动态 sql的 9 个标签， trim|where|set|foreach|if|choose|when|otherwise|bind 等，其中为 sql⽚段标签，通过 <include> 标签引⼊ sql ⽚段， <selectKey> 为不⽀持⾃增的主键⽣成策略标签。
+
+#### 4.Mybatis 映射⽂件中，如果 A 标签通过 include 引⽤了 B 标签的内容，请问，B 标签能否定义在 A 标签的后⾯，还是说必须定义在 A 标签的前⾯？
+
+答：虽然 Mybatis 解析 Xml 映射⽂件是按照顺序解析的，但是，被引⽤的 B 标签依然可以定义**在任何地⽅**，Mybatis 都可以正确识别。
+
+原理是，Mybatis 解析 A 标签，发现 A 标签引⽤了 B 标签，但是 B 标签尚未解析到，尚不存在，此时*，Mybatis 会将 A 标签标记为未解析状态，然后继续解析余下的标签，*包含 B 标签，待所有标签解析完毕，Mybatis 会重新解析那些被标记为未解析的标签，此时再解析 A 标签时，B 标签已经存在，A标签也就可以正常解析完成了。
+
+###  12.Dao 接⼝的⼯作原理是什么？
+
+**最佳实践中，通常⼀个 Xml 映射⽂件，都会写⼀个 Dao 接⼝与之对应，请问，这个 Dao 接⼝的⼯作原理是什么？Dao 接⼝⾥的⽅法，参数不同时，⽅法能重载吗？**
+
+dao接口也就是常说的Mapper接口，接口的权限名，就是映射文件的中 的namespace的值。
+
+接口的方法名就是MappedStatement 的id 值。接口方法内的参数就是传给sql 的参数。
+
+Mapper 接口没有实现类，当调用接口方法时，接口全限名+方法名	拼接字符串作为 key 值。可唯一定位一个 MappedStatement。
+
+dao 接口的方法不能重载，因为是根据全限名+方法名进行寻找的。
+
+dao接口的工作原理是 JDK 动态代理，Matis 运行时会使用 JDK 动态代理为 Dao 接口生成代理 Proxy对象，代理对象会拦截接口方法，转而执行MappedStatement 所代表的sql，然后将执行结果返回
+
+### 13.Mybatis 是否可以映射 Enum 枚举类？
+
+**Mybatis 可以映射枚举类，**不单可以映射枚举类，Mybatis 可以映射任何对象到表的⼀列上。
+
+映射⽅式为⾃定义⼀个  TypeHandler ，实现  TypeHandler 的  setParameter() 和  getResult()接⼝⽅法。
+
+ TypeHandler 有两个作⽤，⼀是完成从 javaType ⾄ jdbcType 的转换，⼆是完成jdbcType ⾄ javaType 的转换，体现为  setParameter() 和  getResult() 两个⽅法，分别代表设置 sql 问号占位符参数和获取列查询结果。
 
 ### 14.当实体类中的属性名和表中的字段名不一样，如何将查询的结果封装到指定 pojo
 
 1. 通过在查询的sql 语句中定义字段名的别名
 2. 通过<resultMap> 来映射字段名和实体类属性名的一 一 对应关系（注解开发使用@Results）
-
-### 15.映射文件问题
-
-![image-20201025095232573](C:\Users\hp\Desktop\java面试题\img\image-20201025095232573.png)
-
-![image-20201025095211697](C:\Users\hp\Desktop\java面试题\img\image-20201025095211697.png)
-
-### 16.不同的Xml 映射文件，id 是否可以重复
-
-![image-20201025095511170](C:\Users\hp\Desktop\java面试题\img\image-20201025095511170.png)
-
-### 17.Mybatis 中如何执行批处理
-
-使用BatchExecutor 完成批处理
-
-### 18.Mybatis 中如何指定使用哪一种 Executor 执行器？
-
-![image-20201025095812831](C:\Users\hp\Desktop\java面试题\img\image-20201025095812831.png)
 
 ### 19.如何获取自动生成的（主）键值
 
@@ -1650,6 +1732,12 @@ Mybatis有三种基本的执行器（Executor）：
 - hibernate-annotation是Hibernate支持annotation方式配置的基础，它包括了标准的JPA annotation以及Hibernate自身特殊功能的annotation。
 - hibernate-core是Hibernate的核心实现，提供了Hibernate所有的核心功能。
 - hibernate-entitymanager实现了标准的JPA，可以把它看成hibernate-core和JPA之间的适配器，它并不直接提供ORM的功能，而是对hibernate-core进行封装，使得Hibernate符合JPA的规范。
+
+### 23.为什么说 Mybatis 是半⾃动 ORM 映射⼯具？它与全⾃动的区别在哪⾥？
+
+Hibernate 属于全⾃动 ORM 映射⼯具，使⽤ Hibernate 查询关联对象或者关联集合对象时，可以根据对象关系模型直接获取，所以它是全⾃动的。
+
+⽽ Mybatis 在查询关联对象或关联集合对象时，需要⼿动编写 sql 来完成，所以，称之为半⾃动 ORM 映射⼯具。
 
 ### 23.如何使⽤JPA在数据库中⾮持久化⼀个字段？
 
@@ -1681,6 +1769,18 @@ transient String transient3; // not persistent because of transient
 @Transient
 String transient4; // not persistent because of @Transient
 ```
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
