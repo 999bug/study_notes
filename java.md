@@ -715,10 +715,6 @@ class CloneTest {
 
 ## ⭐JavaWeb⭐
 
-### JSP
-
-------
-
 ### 1. jsp 和 servlet 有什么区别？
 
 1. jsp经编译后就变成了Servlet.（JSP的本质就是Servlet，JVM只能识别java的类，不能识别JSP的代码，Web容器将JSP的代码编译成JVM能够识别的java类）
@@ -776,6 +772,32 @@ class CloneTest {
 - Session**是在服务端保存的一个数据结构**，用来跟踪用户的状态，这个数据可以保存在集群、数据库、文件中；
 - Cookie是客户端保存用户信息的一种机制，用来记录用户的一些信息，也是实现Session的一种方式。
 
+**图解**
+
+![image-20201104151353924](C:\Users\hp\Desktop\java面试题\img\image-20201104151353924.png)
+
+1. cookie 数据存储在客户端上，session 数据存储在服务器上
+2. cookie 不安全，别人可以分析放在本地中的cookie 并进行cookie欺骗，需要考虑安全的应用请使用session
+3. session 会在一定时间中保存到服务器，当访问增多，会消耗服务器的性能，如果考虑减轻服务器性能方面考虑 cookie
+4. 单个cookie 在客户端的限制是3 K，也即是说站点在客户端保存的cookie 不能超过3 K
+5. session 适合分布式登录，同一个用户在访问一个网站期间，所有的session在任何一个地方都可以访问到。而cookie 设置了路径参数，同一个网站下的不同路径互相是访问不了的，cookie 只能是子路径访问父路径的cookie
+
+### **购物车session 实现思路**
+
+​		session 是一种保存上下文的	信息的机制，它是针对每一个用户的，变量的值保存在服务器端，通过 SessionID 来区分不同的客户，session 是以cookie 或 URL 重写为基础的。
+
+​		默认使用 cookie 来实现，系统会为其创建一个名为**JSESSIONID 的输出 cookie**，我们叫做 **session cookie**，以区分 persistent cookie（我们通常所说的cookie）。
+
+​		注意 **session cookie是存储于浏览器内存中的**，并不是写到硬盘上的，这也就是我们刚才看到的 JSESSIONID，我们通常情是看不到 JSESSIONID 的，但是当我们把浏览器的 cookie禁止后，web服务器会采用∪RL重写的方式传递 Sessionid我们就可以在地址栏看到
+
+sessionid= KWJHUG6JJM65HS2K6之类的字符串。
+
+​		明白了原理，我们就可以很容易的分辨出 persistent cookie和 session cookie的区别了，网上那些关于两者安全性的讨论也就一目了然了， session cookie针对某一次会话而言，会话结束 session cookie也就随着消失了，而**persistent cookie只是存在于客户端硬盘上的一段文本（通常是加密的），**而且可能会遭到 cookie欺骗以及针对 cookie的跨站脚本攻击，自然不如 session cookie安全了
+
+​		通常 **session cookie是不能跨窗口使用的**，当你新开了一个浏览器窗口进入相同页面时，系统会赋予你一个新的 sessionid这样我们信息共享的目的就达不到了。
+
+**此时我们可以先把 sessionid保存在 persistent cookie中**，然后在新窗persistent cookie的结合我们就实现了跨窗口的 session tracking会话跟踪）
+
 ### **5.说一下 session 的工作原理？**
 
 其实session是一个存在服务器上的类似于一个**散列表格的文件**。
@@ -831,9 +853,9 @@ Struts2有自己的拦截Interceptor机制，**SpringMVC这是用的是独立的
 
 spring MVC和Spring是无缝的。从这个项目的管理和安全上也比Struts2高。
 
-### servlet 
 
-#### 1、doGet()和doPost()区别？ 
+
+### 8、doGet()和doPost()区别？ 
 
 **doGet()**
 
@@ -861,7 +883,7 @@ throws ServletException, IOException {
 }
 ```
 
-#### 2、servlet的生命周期 
+### 9、servlet的生命周期 
 
 1. Servlet 通过调用 init () 方法进行初始化。
 
@@ -879,13 +901,13 @@ throws ServletException, IOException {
 
    destroy() 方法只会被调用一次，在 Servlet 生命周期结束时被调用。destroy() 方法可以让您的 Servlet 关闭数据库连接、停止后台线程、把 Cookie 列表或点击计数器写入到磁盘，并执行其他类似的清理活动。
 
-#### 3、如何现实servlet的单线程模式 
+### 10、如何现实servlet的单线程模式 
 
 ```jsp
 <%@ page isThreadSafe="false"%>
 ```
 
-#### **4.forward 和redirect的区别?**
+### **11. forward 和redirect的区别?**
 
 **forward(转发)**:
 
@@ -916,11 +938,11 @@ throws ServletException, IOException {
 
    forward 高于 direct
 
-#### 5.什么情况下调用doGet()和doPost()？
+### 5.什么情况下调用doGet()和doPost()？
 
 Jsp页面中的form标签里的method属性为get时调用doGet()，为post时调用doPost()。
 
-#### **6.JSP和Servlet有哪些相同点和不同点，他们之间的联系是什么？** 
+### **6.JSP和Servlet有哪些相同点和不同点，他们之间的联系是什么？** 
 
  答：JSP是Servlet技术的扩展，本质上是Servlet的简易方式，更强调应用的外表表达。JSP编译后是**"类servlet"**。
 
@@ -928,7 +950,136 @@ Servlet和JSP最主要的不同点在于，Servlet的应用逻辑是在Java文�
 
 JSP侧重于视图，Servlet主要用于控制逻辑。
 
-#### **7.请解释Filter和Listener的理解及作用？**、
+### **7.请解释Filter和Listener的理解及作用？**、
+
+### 8.jdbc流程
+
+1. 加载JDBC 驱动程序
+
+```java
+class.forName("com.mysql.jdbc.Driver");
+```
+
+2. 提供JDBC 连接的URL
+
+   ```
+   2.获取数据库连接
+   方法:static Connection getConnection （String url, String user, String password
+   参数
+   ur1：指定连接的路径
+   	语法：jdbc:mysq1：//i地址（域名）：端口号/数据库名称
+   	例子：jdbc:mysq1：//localhost：3386/db3
+   	细节：如果连接的是本机mysq1服务器，并且mysq1服务默认端口是3306，则ur1可以简写		为：jdbc:mysq1：///数据库名称
+   user：用户名
+   password：密码
+   ```
+
+3. 创建数据库的连接
+
+   ```java
+   //获取 connection对象
+   Connection conn = DriverManager getconnection（ 
+   url："jdbc:mysql://localhost：3306/ db3"， user："root",password："root");
+   
+   ```
+
+4. 创建一个Statement
+
+```java
+要执行SQL语句，必须获得 java.sql.Statement实例，
+Statement实例分为以下3种类型：
+1、执行静态SQL语句。通常通过 Statement实例实现。
+2、执行动态SQL语句。通常通过 PreparedStatement实例实现。
+3、执行数据库存储过程。通常通过 CallableStatement实例实现。
+//获取执行sqL的对象 
+Statement stmt = conn.createStatement();
+String sql = "select * from tb_user";
+PreparedStatement pstmt = conn.createStatement(sql);
+```
+
+5. 执行sql 语句
+
+   ```
+   Statement接口提供了三种执行SQL语句的方法：
+   executeQuery 、executeUpdate 和 execute
+   1、 Resultset executeQuery（ String sqlString）执行査询数据库的SQL语句，返回一个结果集（ Resultset）对象。
+   2、 int execute Update（ String sqlstring）用于执行 INSERT、 UPDATE或DELETE语句以及 SQL DDL语句，如：CREATE TABLE和 DROP TABLE等
+   3、 execute（ sql String）：用于执行返回多个结果集、多个更新计数或二者组合的语句。具体实现的代码：
+   ```
+
+   6. 处理结果
+
+      ```
+      ResultSet st= stmt.executeQuery(sql);
+      ```
+
+   7. 关闭连接，与创建顺序相反
+
+### 9.Ajax
+
+Ajax并不算是一种新的技术，全称是 asychronous javascript and xml 可以说是已有技术的组合，主要用来实现客户端与服务器端的异步通信效果，实现页面的局部刷新
+
+#### 1.页面编码和被请求的资源编码如果不一致如何处理？
+
+对于ajax请求传递的参数，如果是get请求方式，参数如果传递中文，在有些浏览器会乱码，不同的浏览器对参数编码的处理方式不同，所以对于get请求的参数需要使用 encodeURIComponent函数对参数进行编码处理，后台开发语言都有相应的解码api。对于post请求不需要进行编码
+
+#### 2.Ajax 的过程
+
+1.创建 Xml http request 对象，也就是创建一个异步调用对象
+
+2.创建一个新的HTTP请求，并指定该HTTP请求的方法、∪RL及验证信息
+
+3.设置响应HTTP请求状态变化的函数
+
+4.发送HTTP请求
+
+5.获取异步调用返回的数据
+
+6.使用 JavaScript和DoM实现局部刷新
+
+#### 3.简述异步加载
+
+![image-20201104161608043](C:\Users\hp\Desktop\java面试题\img\image-20201104161608043.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4091,3 +4242,4 @@ jsonp 即 json+padding，动态创建script标签，利用script标签的src属�
 
 ### 请用java写二叉树算法，实现添加数据形成二叉树功能，并以先序的方式打印出来. 
 
+​           
