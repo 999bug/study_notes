@@ -11,7 +11,7 @@ Java面试题集
   算机网络的开放系统互联参考模型（OSI/RM）和Internet的TCP/IP模型都是分层结构，大型网站的软件系统
   也可以使用分层的理念将其分为持久层（提供数据存储和访问服务）、业务层（处理业务逻辑，系统中最核
   心的部分）和表示层（系统交互、视图展示）。需要指出的是：（1）分层是逻辑上的划分，在物理上可以位
-  于同一设备上也可以在不同的设备上部署不同的功能模块，这样可以使用更多的计算资源来应对用户的并发
+  于同一设备上也可iping以在不同的设备上部署不同的功能模块，这样可以使用更多的计算资源来应对用户的并发
   访问；（2）层与层之间应当有清晰的边界，这样分层才有意义，才更利于软件的开发和维护。
 
 **分割**
@@ -93,6 +93,10 @@ Java面试题集
    - 资源复用有两种方式 一是单例，而是对象池，我们使用的数据库连接池、线程池都
      是对象池化技术，这是典型的用空间换取时间的策略
    - 另一方面也实现对资源的复用，从而避免了不必要的创建和释放资源所带来的开销。
+
+### 4.如何防止表单重复提交
+
+![image-20201105110224755](C:\Users\hp\Desktop\java面试题\img\image-20201105110224755.png)
 
 ## ⭐容器⭐
 
@@ -726,18 +730,41 @@ class CloneTest {
 
 **JSP有9个内置对象：**
 
-- request：封装客户端的请求，其中包含来自GET或POST请求的参数；
+- **request：**封装客户端的请求，其中包含来自GET或POST请求的参数；
   - 它包含了有关浏览器请求的信息，并且提供了几个用于获取**cookie, header, 和session**数据的有用的方法。 
-- response：封装服务器对客户端的响应；
+  - 是 HttpServletRequest 类的实例
+  - 作用域 ：request （用户请求期）
+- **response：**封装服务器对客户端的响应；
   - 并提供了几个用于设置**送回** 浏览器的响应的方法（**如cookies,头信息等）** 
-- pageContext：通过该对象可以获取其他对象；
+  - 是 HttpServletResponse 类的实例
+  - 作用域 page（页面执行期）
+- **pageContext：**通过该对象可以获取其他对象；
   - 它是用于方便存取各种范围的名字空间、servlet相关的对象的API，并且包装了**通用的servlet相关功能的方法。** 
-- session：封装用户会话的对象；Session可以存贮用户的状态信息 
-- application：封装服务器运行环境的对象； 这有助于查找有关servlet引擎和servlet环境的信息 
-- out：输出服务器响应的输出流对象；
-- config：Web应用的配置对象；
-- page：JSP页面本身（相当于Java程序中的this）；
-- exception：封装页面抛出异常的对象。
+- **session：**
+  - 指的是客户端与服务器的一次会话，从客户端连到服务器的一个 WebApplication 开始，直到客户端与服务器断开连接为止；
+  - Session可以存贮用户的状态信息 
+  - 它是HttpSession 的实例
+  - 作用域 session（会话期）
+- **application：**
+  - 实现了用户数据的共享，可存放全局变量。
+  - 它开始于服务器启动，直到服务器关闭，在此期间此对象一直存在。这样在用户的前后连接或不同用户之间的连接中，可以对此对象的同一属性进行操作；
+  - 在任何地方对此对象属性的操作，都将影响到其他用户对此的访问。
+  - 服务器的的启动和关闭决定了 application 对象的生命；
+  - 作用域 application。
+- **out：**
+  - 输出服务器响应的输出流对象；
+  - out 对象是 JspWriter 类的实例，是向客户端输出内容常用的对象
+  - 作用域 page
+- **config：**Web应用的配置对象；作用域 page
+- **page：**
+  - JSP页面本身（相当于Java程序中的this）；
+  - page 对象代表了正在运行的由JSP 文件产生的类对象。
+  - 作用域 page
+- **exception：**
+  - **封装页面抛出异常的对象。**
+  - 当一个页面在运行过程中 发生了例外，就产生这个对象。
+  - 如果一个JSP 页面要应用此对象，就必须把isErrorPage 设为true，否则无法编译。
+  - 作用域 page
 
 ### **3.说一下 jsp 的 4 种作用域？**
 
@@ -1043,11 +1070,11 @@ Ajax并不算是一种新的技术，全称是 asychronous javascript and xml �
 
 
 
+### 10.JS选择器
 
+![image-20201105081151913](C:\Users\hp\Desktop\java面试题\img\image-20201105081151913.png)
 
-
-
-
+![image-20201105081208508](C:\Users\hp\Desktop\java面试题\img\image-20201105081208508.png)
 
 
 
@@ -1175,7 +1202,15 @@ Spring通过DI（依赖注入）实现IOC（控制反转），常用的注入方
 
 1. 构造方法注入
 2. setter注入
-3. 基于注解的注入
+3. 基于接口的注入
+
+![image-20201105100538420](C:\Users\hp\Desktop\java面试题\img\image-20201105100538420.png)
+
+Spring 支持构造器注入和setter 方法注入：
+
+​	构造器注入，通过<constructor-arg> 元素完成注入
+
+​	setter 方法注入，通过<property> 元素完成注入（开发中常用）
 
 ### 5.Spring 中的单例 bean 的线程安全问题了解吗？
 
@@ -1269,9 +1304,11 @@ BeanFactory 实例化后并不会自动实例化Bean，**只有 当Bean 被使�
 
 ------
 
-**ApplicationConext 是 BeanFactory 的子接口**，扩展了 BeanFactory 的功能，提供了支持国际化的文本消息，**统一的资源文件读取方式**，**事件传播**以**及应用层的特别配置**等。
+**ApplicationConext 继承于 BeanFactory 接口**，扩展了 BeanFactory 的功能，提供了支持国际化的文本消息，**统一的资源文件读取方式**，**事件传播**以**及应用层的特别配置**等。
 
 容器会在初始化时对配置的Bean 进行预实例化，Bean 的依赖注入在容器初始化时就已经完成，属于立即加载，适合单例模式，一般推荐使用。
+
+**开发中使用ApplicationContext，web 项目中使用WebApplicationContext。**
 
 ### 15.Spring 有几种配置方式
 
@@ -1359,11 +1396,23 @@ spring 框架提供了以下4种方式来管理bean 的声明周期事件
 
 ### 27.Spring 中的 bean ⽣命周期?
 
+![image-20201105100341944](C:\Users\hp\Desktop\java面试题\img\image-20201105100341944.png)
+
 ![image-20201028222717127](C:\Users\hp\Desktop\java面试题\img\image-20201028222717127.png)
 
 ![image-20201028222734581](C:\Users\hp\Desktop\java面试题\img\image-20201028222734581.png)
 
 ![image-20201028222831174](C:\Users\hp\Desktop\java面试题\img\image-20201028222831174.png)
+
+### 28.Spring 配置 bean 实例化有哪些方式
+
+![image-20201105100214242](C:\Users\hp\Desktop\java面试题\img\image-20201105100214242.png)
+
+### 29.Spring 如何处理线程并发问题？ThreadLocal
+
+![image-20201105104228541](C:\Users\hp\Desktop\java面试题\img\image-20201105104228541.png)
+
+![image-20201105104243796](C:\Users\hp\AppData\Roaming\Typora\typora-user-images\image-20201105104243796.png)
 
 ## ⭐Spring MVC⭐
 
@@ -1458,6 +1507,8 @@ RequestMapping是一个用来处理请求地址映射的注解，可用于类或
 
 ### 13. 如何解决Web页面乱码问题？
 
+解决 post 请求乱码问题
+
 ```java
 <filter>
 	<filter-name>encodingFilter</filter-name>
@@ -1477,10 +1528,14 @@ RequestMapping是一个用来处理请求地址映射的注解，可用于类或
         
 	<filter-mapping>
 		<filter-name>encodingFilter</filter-name>
-		<url-pattern>*</url-pattern>
+		<url-pattern>/*</url-pattern>
 	</filter-mapping>
 
 ```
+
+**解决get 方法的乱码问题**
+
+![image-20201105105324930](C:\Users\hp\Desktop\java面试题\img\image-20201105105324930.png)
 
 ### 14.@RestController和 Controller
 
@@ -1491,6 +1546,12 @@ Controller 返回⼀个⻚⾯单独使⽤  @Controller 不加  @ResponseBody 的
 @RestController **返回 JSON 或 XML 形式数据**但 @RestController 只返回对象，对象数据直接以 JSON 或 XML 形式写⼊ HTTP 响应(Response)中，这种情况属于 RESTful Web服务，这也是⽬前⽇常开发所接触的最常⽤的情况**（前后端离）。**
 
 ![image-20201028220157645](C:\Users\hp\Desktop\java面试题\img\image-20201028220157645.png)
+
+### 15.@Resource 和@Autowired 区别？
+
+![image-20201105104842377](C:\Users\hp\Desktop\java面试题\img\image-20201105104842377.png)
+
+![image-20201105104901407](C:\Users\hp\Desktop\java面试题\img\image-20201105104901407.png)
 
 ## ⭐Spring boot⭐
 
@@ -1669,6 +1730,18 @@ Hystrix 是一个延迟和容错库，指在隔离远程系统，服务和第三
 
 ## ⭐Mybatis⭐
 
+### 理解 Mybatis
+
+![image-20201105105523768](C:\Users\hp\Desktop\java面试题\img\image-20201105105523768.png)
+
+### Mybatis 是如何解决 JDBC 的不足之处的
+
+![image-20201105105549285](C:\Users\hp\Desktop\java面试题\img\image-20201105105549285.png)
+
+### Mybatis 的编程步骤
+
+![image-20201105105728780](C:\Users\hp\Desktop\java面试题\img\image-20201105105728780.png)
+
 ### **1. #{}和 ${}的区别是什么？**
 
 - \#{}是预编译处理，${}是字符串替换；
@@ -1714,6 +1787,8 @@ association指的就是一对一，collection指的就是一对多查询。在My
 
 #### **2.说一下 mybatis 的一级缓存和二级缓存？**
 
+![image-20201105105955596](C:\Users\hp\Desktop\java面试题\img\image-20201105105955596.png)
+
 一级缓存: 基于 PerpetualCache 的 HashMap 本地缓存，其存储作用域为 Session，当 Session flush 或 close 之后，该 Session 中的所有 Cache 就将清空，默认打开一级缓存。
 
 二级缓存与一级缓存其机制相同，默认也是采用 PerpetualCache，HashMap 存储，不同在于其存储作用域为 Mapper(Namespace)，并且可自定义存储源，**如 Ehcache**。
@@ -1738,7 +1813,7 @@ association指的就是一对一，collection指的就是一对多查询。在My
 
 （1）Mybatis和hibernate不同，它不完全是一个ORM框架，因为MyBatis需要程序员自己编写Sql语句。
 
-（2）Mybatis直接编写原生态sql，可以严格控制sql执行性能，灵活度高，非常适合对关系数据模型要求不高的软件开发，因为这类软件需求变化频繁，一但需求变化要求迅速输出成果。但是灵活的前提是mybatis无法做到数据库无关性，如果需要实现支持多种数据库的软件，则需要自定义多套sql映射文件，工作量大。 
+（2）Mybatis直接编写原生态sql，可以严格控制sql执行性能，灵活度高，非常适合对关系数据模型要求不高的软件开发，因为这类软件需求变化频繁，一但需求变化要求迅速输出成果。但是灵活的前提是**mybatis无法做到数据库无关性**，如果需要实现支持多种数据库的软件，则需要自定义多套sql映射文件，工作量大。 
 
 （3）Hibernate对象/关系映射能力强，数据库无关性好，对于关系模型要求高的软件，如果用hibernate开发可以节省很多代码，提高效率。 
 
@@ -3913,9 +3988,9 @@ where 条件
 select * from department where id in(select did from employee where age=20);
 ```
 
-**带 EXIISTS 关键字的子查询**：EXISTS 关键字后面的参数可以是任意一个子查询，这个子查询的作用相当于测试，他不产生任何数据，只返回TRUE 或FALSE ，当返回值为TRUE 时，外层查询才会执行。
+**带 EXISTS 关键字的子查询**：EXISTS 关键字后面的参数可以是任意一个子查询，这个子查询的作用相当于测试，他不产生任何数据，只返回TRUE 或FALSE ，当返回值为TRUE 时，外层查询才会执行。
 
-EXISTS 关键字比 IN 关键字的运行效率高
+**EXISTS 关键字比 IN 关键字的运行效率高：**因为 EXISTS 允许用户使用相关子查询以排除一个表能够与另一个表成功连接的所有记录。 EXISTS 用到了连接，能够发挥已建好索引的作用，IN 不能使用索引
 
 **带any 关键字的子查询**： any 关键字表示，满足其中任意一个条件，它允许创建一个表达式对子查询的返回值列表进行比较，只要满足内层子查询的任意一个比较条件，就返回一个结果作为外层查询条件
 
@@ -3946,6 +4021,44 @@ select * from department where did = (select did from employee where name ='赵�
 
 - delete 后面可以跟where 子句，通过指定的条件表达式删除满足条件的部分记录，truncate 则删除全部记录。
 - delete 删除表中数据后，再次像表中添加记录时，自动增长的值为删除时该字段的最大值 + 1；而 truncate 自动增加的默认初始值重新从1开始；
+
+### 21.SQL Select 语句的执行顺序
+
+```
+from ---> where ---> group by ---> having ---> 计算所有的表达式 ---> order by--->select 输出
+```
+
+### 22.Mysql 优化举例
+
+1. 当只要一行数据时，使用 limit
+2. 选择正确的存储引擎： MyISAM 适合大量查询的请求，使用表锁，功能单一；InnoDB 适合写请求多的业务，支持事务，行锁
+3.  Not Exist 代替 Not In：**EXISTS 关键字比 IN 关键字的运行效率高：**因为 EXISTS 允许用户使用相关子查询以排除一个表能够与另一个表成功连接的所有记录。 **EXISTS 用到了连接**，能够发挥已建好**索引**的作用，**IN 不能使用索引**
+4. 对操作符的优化，尽量不采用不利用索引的操作符
+5. Mysql 分库分表 ： **垂直切分和水平切分**
+
+### 23.垂直切分、水平切分、分库分表、读写分离
+
+**垂直切分**
+
+![image-20201105092219990](C:\Users\hp\Desktop\java面试题\img\image-20201105092219990.png)
+
+**水平切分**
+
+![image-20201105092211139](C:\Users\hp\Desktop\java面试题\img\image-20201105092211139.png)
+
+**单库多表**
+
+![image-20201105092625962](C:\Users\hp\Desktop\java面试题\img\image-20201105092625962.png)
+
+**多库多表**
+
+![image-20201105092658027](C:\Users\hp\Desktop\java面试题\img\image-20201105092658027.png)
+
+**Mysql读写分离**
+
+![image-20201105092837216](C:\Users\hp\Desktop\java面试题\img\image-20201105092837216.png)
+
+![image-20201105092855533](C:\Users\hp\Desktop\java面试题\img\image-20201105092855533.png)
 
 ## ⭐Redis⭐
 
