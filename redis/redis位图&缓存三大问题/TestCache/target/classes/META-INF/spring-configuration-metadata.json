@@ -1,0 +1,23 @@
+{
+  "groups": [
+    {
+      "name": "bloom.filter",
+      "type": "com.luban.testcache.filter.RedisBloomFilter",
+      "sourceType": "com.luban.testcache.filter.RedisBloomFilter"
+    }
+  ],
+  "properties": [
+    {
+      "name": "bloom.filter.expected-insertions",
+      "type": "java.lang.Long",
+      "sourceType": "com.luban.testcache.filter.RedisBloomFilter",
+      "defaultValue": 0
+    },
+    {
+      "name": "bloom.filter.fpp",
+      "type": "java.lang.Double",
+      "sourceType": "com.luban.testcache.filter.RedisBloomFilter"
+    }
+  ],
+  "hints": []
+}
