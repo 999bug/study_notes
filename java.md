@@ -1398,6 +1398,13 @@ Forward和Redirect代表了两种请求转发方式：直接转发和间接转�
 
 间接转发就相当于："A找B借钱，B说没有，让A去找C借"。
 
+```
+"forward:user.do?name=method4"
+"redirect:http://www.uu456.com"
+```
+
+
+
 ### 9、servlet的生命周期 
 
 1. Servlet 通过调用 init () 方法进行初始化。
@@ -1667,13 +1674,13 @@ home接口是EJB工厂用于创建和移除查找EJB实例
 - Spring MVC 是一个精心设计的WEB 框架
 - Spring 提供了一个便捷的事务管理接口，使用于小型的本地事务处理
 
-### 2.谈谈你对IoC 和AOP 的理解
+### 2.谈谈你对IOC 和AOP 的理解
 
-**IoC**（inverse of control）控制反转，是一种设计思想，就是将原本程序中手动创建(、初始化、销毁) 的对象交给Spring框架来管理。
+**IOC**（inverse of control）控制反转，是一种设计思想，就是将原本程序中手动创建(、初始化、销毁) 的对象交给Spring框架来管理。
 
 IoC就像一个工厂，当我们需要使用一个对象的时候，只需要配置好注解/文件即可，完全不用考虑是如何被创建出来的。
 
-**AOP**:面向切面编程，能够将那些与业务无关却又通用的功能（例如事务处理，日志管理，权限控制等）封装起来，降低代码的耦合性，增加可扩展性和可维护性。
+**AOP**（Aspect Oriented Program）:面向切面编程，能够将那些与业务无关却又通用的功能（例如事务处理，日志管理，权限控制等）封装起来，降低代码的耦合性，增加可扩展性和可维护性。
 
 spring AOP 是基于动态代理的，如果要代理的对象实现了接口，那么使用 JDK Proxy,去创建代理对象，对没有实现接口的对象，这时会使用Cglib
 
@@ -1746,14 +1753,16 @@ Spring容器负责创建应用程序中的bean同时通过ID来协调这些对�
 
 ![image-20201024215330979](C:\Users\hp\Desktop\java面试题\img\image-20201024215330979.png)
 
-### **8.spring 事务实现方式有哪些？**
+### 8.Spring 事务
+
+#### 1.spring 事务实现方式有哪些？
 
 1. 编程式事务管理对基于 POJO 的应用来说是唯一选择。我们需要在代码中调用beginTransaction()、commit()、rollback()等事务管理相关的方法，这就是编程式事务管理。
 2. 基于 TransactionProxyFactoryBean 的声明式事务管理
 3. 基于 @Transactional 的声明式事务管理
 4. 基于 Aspectj AOP 配置事务
 
-###  9.**说一下 spring 的事务隔离？**
+####  2.**说一下 spring 的事务隔离？**
 
 事务隔离级别指的是一个事务对数据的修改与另一个并行的事务的隔离程度，当多个事务同时访问相同数据时，如果没有采取必要的隔离机制，就可能发生以下问题：
 
@@ -1764,7 +1773,7 @@ Spring容器负责创建应用程序中的bean同时通过ID来协调这些对�
 
 ![image-20201028225735587](C:\Users\hp\Desktop\java面试题\img\image-20201028225735587.png)
 
-### 10.Spring 事务中哪⼏种事务传播⾏为?
+#### 3.Spring 事务中哪⼏种事务传播⾏为?
 
 propagation  n. 传播；繁殖；增殖 
 
@@ -1772,7 +1781,7 @@ propagation  n. 传播；繁殖；增殖
 
 ![image-20201028230347970](C:\Users\hp\Desktop\java面试题\img\image-20201028230347970.png)
 
-### 11.@Transactional(rollbackFor = Exception.class)注解了解吗？
+#### 4.@Transactional(rollbackFor = Exception.class)注解了解吗？
 
 我们知道：Exception分为运⾏时异常 RuntimeException和⾮运⾏时异常。
 
@@ -1876,7 +1885,21 @@ spring 框架提供了以下4种方式来管理bean 的声明周期事件
 
 ### 25.Spring 框架中都用到了哪些设计模式
 
-![image-20201024223349455](C:\Users\hp\Desktop\java面试题\img\image-20201024223349455.png)
+1.工厂模式（BeanFactory用来创建对象的实例）
+
+2.单例模式（Spring中默认bean为单例）
+
+3.适配器模式（HandlerAdapter Spring MVC 前端控制器发来的请求经过HandlerAdapter 处理器适配后调用具体的Controller）
+
+4.装饰者模式
+
+5.代理模式（AOP中用到 JDK 动态代理）
+
+6.观察者模式（listener的实现，例如ApplicationListener）
+
+7.策略模式（定义一系列的算法，把它们一个个的封装起来，并且使它们可以相互替换。在实例化对象时用到）
+
+8.模板模式（jdbcTemplate、RestTemplate、JmsTemplate、JpaTemplate）
 
 ### 26.@Component 和 @Bean 的区别是什么？
 
@@ -1939,7 +1962,11 @@ spring 框架提供了以下4种方式来管理bean 的声明周期事件
 
 ### 4.Spring MVC 和struts2的区别
 
-![image-20201024224955281](C:\Users\hp\Desktop\java面试题\img\image-20201024224955281.png)
+①springmvc的入口是一个servlet即前端控制器，而struts2入口是一个filter过虑器。
+
+②springmvc是基于方法开发，传递参数是通过方法形参，可以设计为单例或多例(建议单例)，struts2是基于类开发，传递参数是通过类的属性，只能设计为多例。 
+
+③Struts采用值栈存储请求和响应的数据，通过OGNL存取数据， springmvc通过参数解析器是将request对象内容进行解析成方法形参，将响应数据和页面封装成ModelAndView对象，最后又将模型数据通过request对象传输到页面。 Jsp视图解析器默认使用jstl。
 
 ### 5.基础传参
 
@@ -2047,6 +2074,60 @@ Controller 返回⼀个⻚⾯单独使⽤  @Controller 不加  @ResponseBody 的
 
 ![image-20201105104901407](C:\Users\hp\Desktop\java面试题\img\image-20201105104901407.png)
 
+### 16.Spring MVC常用注解
+
+**1. @RequestBody ：**
+
+- 直接获取请求体的内容，直接使用得到的是 key = value & key = value 。。结构的数据。不适用 Get 请求的方式
+  - required：是否必须有请求体。默认值是ture。当取值为true时，get请求方式就会报错。如果取值为 false，get请求得到是null
+
+![image-20201122145729606](C:\Users\hp\Desktop\java面试题\img\image-20201122145729606.png)
+
+![image-20201122145737814](C:\Users\hp\Desktop\java面试题\img\image-20201122145737814.png)
+
+**2。@RequestParam**
+
+- 把请求中指定名称的参数给控制器中的形参赋值
+  - value：请求参数的名称
+  - required ： 请求参数中是否必须提供此参数。默认是 true 。表示必须提供。
+- 当所传参数不同可以使用此注解，但是一旦使用所传参数必须和RequestParam 中的name 保持相同名称。
+
+**3。@PathVariable**.
+
+- 用于绑定 url 中的占位符，例如 url 中 /find/{id} ，这个 id 就是 url占位符。
+  -  value：用于指定url中占位符名称
+  -  required：是否必须提供占位符
+
+![image-20201122145657092](C:\Users\hp\Desktop\java面试题\img\image-20201122145657092.png)
+
+**4 . @RequestHeader**
+
+- 用于获取请求消息头。
+  - value：提供消息头名称
+  - required：是否必须有此消息头
+
+![image-20201122145640024](C:\Users\hp\Desktop\java面试题\img\image-20201122145640024.png)
+
+**5.@ReponseBody**
+
+- 在使用 @RequestMapping后，返回值通常解析为跳转路径，但是加上 @ResponseBody 后返回结果不会被解析为跳转路径，而是直接写入 HTTP response body 中。 比如异步获取 json 数据，加上 @ResponseBody 后，会直接返回 json 数据。
+
+**6.@RequestMapping**
+
+- 用来处理请求地址映射的注解，可用于类或方法上。用于类上代表所有方法的请求都以该地址作为父路径
+
+value：   指定请求的实际地址，指定的地址可以是URI Template 模式（后面将会说明）；
+
+method： 指定请求的method类型， GET、POST、PUT、DELETE等；
+
+consumes： 指定处理请求的提交内容类型（Content-Type），例如application/json, text/html;
+
+produces:  指定返回的内容类型，仅当request请求头中的(Accept)类型中包含该指定类型才返回；
+
+params： 指定request中必须包含某些参数值是，才让该方法处理。
+
+headers： 指定request中必须包含某些指定的header值，才能让该方法处理请求。
+
 ## ⭐Spring boot⭐
 
 ### 1.什么是 spring boot？
@@ -2086,7 +2167,34 @@ actuator  执行机构
 
 ![image-20201029103030129](C:\Users\hp\Desktop\java面试题\img\image-20201029103030129.png)
 
+### 6.请谈谈什么是RESTful
 
+REST 这个词是 Roy Thomas Fielding 在 2000年的博士论文中提出的.
+
+**REST（Representational State Transfer）即表现层状态转化**
+
+**资源（Resources）**
+
+- 表现层指的是 “资源” 的 ”表现层“，所谓资源就是网络上的一个实体，或者说是网络上的一个具体信息。它可以是一张图片、一首歌曲、一种服务，总之是一个具体的实在。你可以用一个 URI 指向它，每种资源对应一个特定的 URI 。要获取资源访问对应的URI 即可，URI 是每一个资源独一无二的地址或独一无二的标识符。所谓上网就是与互联网上的一系列的 “资源” 互动，调用它的URI。
+
+**表现层（Representation）**
+
+- **资源是一种信息实体，它可以有多种外在表现形式。**我们把资源呈现出来的形式叫做它的表现层（representation）。比如，文本可以用 txt 格式表现，也可以用 HTML 格式、XML 格式、JSON 格式表现，甚至可以采用二进制格式；图片可以采用JPG格式表现，也可以使用 PNG 格式表现。
+
+- URI 只代表资源的实体，不代表它的形式。
+- **严格的说，有些网址最后的 .HTML 后缀名是不必要的，因为这个后缀名表示格式，属于 表现层的范畴，而 URI 代表的是资源的位置**，它的具体表现形式，应该在 HTTP 请求的头信息用 Accept 和 Content-Type 字段指定，这两个才是表现层的描述。
+
+**状态转化（State Transfer）**
+
+- 访问一个网站，就代表了客户端和服务器的一个互动过程。在这个过程中，势必涉及到数据和状态的变化。
+- HTTP 协议是一个无状态协议，这意味着所有状态都保存在服务器端，因此客户端想要操作故武器，必须通过某种手段，让服务器发生状态转化（State Transfer）。而这种转化是建立在表现层之上的，所以就是表现层状态转化。
+- 客户端用到的只能是 HTTP 协议，具体来收就是四个表示方式的动词：POST（新建资源、更新资源）、GET（获取资源）、PUT（更新资源）、DELETE（删除资源）。
+
+**总的来说**
+
+- 每一个 URI 代表一种资源
+- 客户端和服务器之间传递这种资源的某种表现层
+- 客户端通过四个 HTTP 动词，对服务端资源进行操作，实现表现层状态转化
 
 ## ⭐Spring Cloud⭐
 
@@ -2375,6 +2483,10 @@ t_id t_name s_id
 | 1 | teacher | 38 | | 1 | teacher | 39 | | 1 | teacher | 40 | | 1 | teacher | 41 | | 1 |
 teacher | 42 | | 1 | teacher | 43 |
 
+#### 3.如果要查询的表名和返回的实体Bean对象不一致,那你是怎么处理的?
+
+在MyBatis里面最主要最灵活的的一个映射对象的ResultMap,在它里面可以映射键值对, 默认里面有id节点,result节点,它可以映射表里面的列名和对象里面的字段名. 并且在一对一,一对多的情况下结果集也一定要用ResultMap
+
 ### 11.映射文件
 
 #### 1.简述Mybatis 的XML 映射文件和Mybatis 内部数据结构之间的映射关系
@@ -2413,7 +2525,7 @@ teacher | 42 | | 1 | teacher | 43 |
 
 ###  12.Dao 接⼝的⼯作原理是什么？
 
-**最佳实践中，通常⼀个 Xml 映射⽂件，都会写⼀个 Dao 接⼝与之对应，请问，这个 Dao 接⼝的⼯作原理是什么？Dao 接⼝⾥的⽅法，参数不同时，⽅法能重载吗？**
+*最佳实践中，通常⼀个 Xml 映射⽂件，都会写⼀个 Dao 接⼝与之对应，请问，这个 Dao 接⼝的⼯作原理是什么？Dao 接⼝⾥的⽅法，参数不同时，⽅法能重载吗？*
 
 dao接口也就是常说的Mapper接口，接口的权限名，就是映射文件的中 的namespace的值。
 
@@ -2433,10 +2545,7 @@ dao接口的工作原理是 JDK 动态代理，Matis 运行时会使用 JDK 动�
 
  TypeHandler 有两个作⽤，⼀是完成从 javaType ⾄ jdbcType 的转换，⼆是完成jdbcType ⾄ javaType 的转换，体现为  setParameter() 和  getResult() 两个⽅法，分别代表设置 sql 问号占位符参数和获取列查询结果。
 
-### 14.当实体类中的属性名和表中的字段名不一样，如何将查询的结果封装到指定 pojo
-
-1. 通过在查询的sql 语句中定义字段名的别名
-2. 通过<resultMap> 来映射字段名和实体类属性名的一 一 对应关系（注解开发使用@Results）
+2. 
 
 ### 19.如何获取自动生成的（主）键值
 
@@ -2892,6 +3001,86 @@ public class Test {
 
 
 ## ⭐JVM⭐
+
+### 1.常见参数
+
+```
+-Xms java虚拟机初始化时的最小内存
+-Xmx java虚拟机可使用的最大内存
+```
+
+### 2.tomcat 8 优化
+
+#### 1.禁用AJP连接
+
+默认开启 AJP 服务，并且占用端口 8009
+
+**什么时AJP？**
+
+- AJP（Apache JServer Protocol）AJPv13协议是面向包的
+- WEB 服务器和 servlet 容器通过 HTTP 连接来交互，为了节省 socket创建的昂贵代价，web 服务器会尝试维护一个永久TCP连接到 servlet容器，并且在多个请求和响应周期过程中重用连接。
+
+不过因为现在一般使用 nginx + tomcat 架构，所以用不到 AJP协议。
+
+#### 2.使用执行池（线程池）
+
+在 tomcat 中每一个用户都是一个线程，所以可以使用线程池提高性能
+
+```
+<Executor name="tomcatThreadPool" namePrefix="catalina-exec-"
+maxThreads="500"
+minSpareThreads="50"
+prestartminSpareThreads="true"
+maxQueueSize="100"/>
+```
+
+```
+maxThreads：最大并发数，默认设置 200，一般建议在 500 ~ 1000，根据硬件设施和业务来判断
+minSpareThreads：Tomcat 初始化时创建的线程数，默认设置 25
+prestartminSpareThreads： 在 Tomcat 初始化的时候就初始化 minSpareThreads 的参数值，如果不等于true，minSpareThreads 的值就没啥效果了
+maxQueueSize，最大的等待队列数，超过则拒绝请求
+```
+
+```
+<!--在Connector中设置executor属性指向上面的执行器-->
+<Connector executor="tomcatThreadPool"  port="8080" protocol="HTTP/1.1"
+       connectionTimeout="20000"
+       redirectPort="8443" />
+```
+
+#### 3.调整运行模式
+
+**tomcat的运行模式有3种：**
+
+1.  bio 默认的模式,性能非常低下,没有经过任何优化处理和支持.
+2.  nio nio(new I/O)，是Java SE 1.4及后续版本提供的一种新的I/O操作方式(即java.nio包及其子包)。
+
+- Java  nio是一个基于缓冲区、并能提供非阻塞I/O操作的Java API，因此nio也被看成是non-blocking I/O的缩写。
+- 它拥有比传统I/O操作(bio)更好的并发运行性能。
+
+1. apr 安装起来最困难,但是从操作系统级别来解决异步的IO问题,大幅度的提高性能.
+
+**推荐使用nio，不过，在tomcat8中有最新的nio2，速度更快，建议使用nio2.**
+
+#### 4.调整堆的比例参数
+
+### 3。JVM内存区
+
+![image-20201122171035912](C:\Users\hp\Desktop\java面试题\img\image-20201122171035912.png)
+
+**线程私有**
+
+- 程序计数器
+- 虚拟机栈
+- 本地方法栈
+
+**线程共享**
+
+- 堆
+- 方法区
+- 直接内存（非运行时数据区的一部分）
+
+![image-20201122171056823](C:\Users\hp\Desktop\java面试题\img\image-20201122171056823.png)
 
 ### 描述一下JVM加载class文件的原理机制? 
 
