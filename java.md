@@ -1270,6 +1270,13 @@ class CloneTest {
 - UnsupportedOperationException：当不支持请求的操作时，抛出该异常。
 - RuntimeExceptionRuntimeException：是那些可能在Java虚拟机正常运行期间抛出的异常的超类。
 
+### 35java中的两种异常类型是什么？他们有什么区别？
+
+- 受检查异常（checked）必须使用 throws 语句在方法或者构造函数上声明
+- 不受检查异常（unchecked）不需要在方法和构造函数上声明
+
+
+
 ## ⭐JavaWeb⭐
 
 ### 1. jsp 和 servlet 有什么区别？
@@ -1741,29 +1748,153 @@ home接口是EJB工厂用于创建和移除查找EJB实例
 
 ## ⭐Spring⭐
 
+### spring 由哪几部分组成？
+
+![image-20201205085444202](C:\Users\hp\Desktop\java面试题\img\image-20201205085444202.png)
+
+spring 由核心容器（Core Container）、数据访问/集成部分（Data Access/Integration）、AOP、Aspects、工具（instrument）、Web、报文发送（Messaging）、Test等模块。
+
+**（一）Core Container**
+
+1）Spring-core IOC 和 DI 的基本实现。
+
+2）spring-beans  BeanFactory 工厂使用IOC 对应用程序配置，BeanFactory 实例化并不会自动实例化 Bean，只有当 bean 使用时 BeanFactory 才会对其进行实例化和依赖关系的装配
+
+3）spring-context  Spring的上下文，即IOC容器。它扩展了 BeanFactory，添加了bean 的声明周期、框架事件体系等
+
+4）spring-expression Spring表达式语言，是统计表达式el 的扩展模块。
+
+**（二）AOP**
+
+spring-aop 面向切面编程，spring中的aop使用了动态代理：基于接口的jdk实现，基于类的Cglib继承实现。
+
+spring-aspects 集成AspectJ，主要是为Spring  Aop提供多种AOp 语法
+
+spring-instructment 提供一些类级的工具支持和ClassLoader级的实现
+
+**（三）数据访问集成**
+
+Spring-jdbc 用来简化JDBC 编程 主要实现类JDBCTemplate
+
+spring-tx 事务支持，
+
+spring-orm 对象关系映射，集成ORM 框架
+
+spring-oxm 对象XML映射
+
+spring-jms 消息服务
+
+spring-messaging 集成一些基础的报文发送服务
+
+**（四）WEB**
+
+spring-web 最基础的web支持，主要建立在核心容器上，通过 servlet 和 listener初始化IOC 容器，也包括一些web相关服务
+
+spring-webmvc 实现了Spring-MVC 的web 应用
+
+spring-websocket 主要于web前端的全双工通信协议
+
+spring-webflux 是一个全新的非阻塞式的 Reactive Web 框架，可以用来异步、非阻塞、事件驱动的服务。
+
+**（Test）**
+
+  1）spring-test：spring测试，提供junit与mock测试功能
+
+  2）spring-context-support：spring额外支持包，比如邮件服务、视图解析等。
+
 ### 1.为什么要使用Spring？
 
-使用Spring 框架带来的主要好处
+- IOC 控制反转，实现了高内聚低耦合
+- AOP 面向切面编程，将业务逻辑与系统的服务分离
+- 支持事务管理，spring提供了统一的事务管理接口，无需手动编程
+- 支持单元测试
+- 支持集成其他框架（Mybatis、Hibernate）
+- 异常处理 spring 提供统一异常处理机制
 
-- Dependency Injection(DI) 依赖注入 使得构造器和 JavaBean properties 文件的依赖关系一目了然
-- 与 EJB 容器相比较，Ioc 容器更加趋向于轻量级。这样一来IoC容器在有限的内存和CPU 资源的情况下进行应用程序的开发和发布 就变得十分有利
-- Spring 并没有闭门造车，Spring 利用了已有的技术 比如ORM框架、logging 框架、 j2EE、
-- Spring 框架是按照模块的形式组织的。由包和类的编号就可以看出其所属的模块，开发者仅仅需要选用他们需要的模块即可
-- 测试 Spring 开发的应用程序十分简单，利用JavaBean形式的POJO类，可以很方便的利用DI 来写入测试数据
-- Spring MVC 是一个精心设计的WEB 框架
-- Spring 提供了一个便捷的事务管理接口，使用于小型的本地事务处理
+### :red_circle:谈谈你对IOC的理解？ 
 
-### 2.谈谈你对IOC 和AOP 的理解
+**IOC**（inverse of control）
 
-**IOC**（inverse of control）控制反转，是一种设计思想，就是将原本程序中手动创建(、初始化、销毁) 的对象交给Spring框架来管理。
+- IOC 字面意思是控制反转，将本来程序中需要我们自己创建的对象交给容器来管理，当我们使用的时候，容器会使用工厂模式自动为我们创建，
+- spring的IOC有三种注入方式：构造器注入、setter注入、接口注入。
+- 对象与对象之间松耦合，有利于功能的复用
 
-IoC就像一个工厂，当我们需要使用一个对象的时候，只需要配置好注解/文件即可，完全不用考虑是如何被创建出来的。
+### :red_circle:谈谈你对AOP的理解？
 
-**AOP**（Aspect Oriented Program）:面向切面编程，能够将那些与业务无关却又通用的功能（例如事务处理，日志管理，权限控制等）封装起来，降低代码的耦合性，增加可扩展性和可维护性。
+**由来原因**
 
-spring AOP 是基于动态代理的，如果要代理的对象实现了接口，那么使用 JDK Proxy,去创建代理对象，对没有实现接口的对象，这时会使用Cglib
+OOP面向对象，允许开发者定义纵向的关系，但是不适用于定义横向的关系，导致了大量的重复代码，而不利于各个模块的重用
+
+**出现**
+
+AOP 面向切面，作为面向对象的一种补充，将那些与业务无关却对多个对象产生公共影响的代码封装起来成为一个可用的模块，这个模块成为切面。减少了系统的耦合性，提高了系统可维护性，通常用于权限认证、日志、事务管理。
+
+**使用方式**
+
+AOP的实现可分为静态代理、动态代理。
+
+**静态代理**为Aspectj
+
+- Aspectj 静态代理具有更好的性能，在编译阶段生成AOP 代理类，因为称为编译器增强。他会在编译器将切面织入到字节码中，运行时就是增强之后的AOP 对象
+
+**动态代理**分为基于接口的 JDK动态代理和基于类的 Cglib动态代理。
+
+- 因为Cglib是通过继承的方式做的动态代理，所以被代理类不能是final
 
 ![image-20201028221426803](C:\Users\hp\Desktop\java面试题\img\image-20201028221426803.png)
+
+### 请解释一下 String AOP 里面的几个名词
+
+（1）切面（Aspect）：被抽取的公共模块，可能会横切多个对象。 在Spring AOP中，切面可以使用通用类（基于模式的风格） 或者在普通类中以 @AspectJ 注解来实现。
+
+（2）连接点（Join point）：指方法，在Spring AOP中，一个连接点 总是 代表一个方法的执行。 
+
+（3）通知（Advice）：在切面的某个特定的连接点（Join point）上执行的动作。通知有各种类型，其中包括“around”、“before”和“after”等通知。许多AOP框架，包括Spring，都是以拦截器做通知模型， 并维护一个以连接点为中心的拦截器链。
+
+（4）切入点（Pointcut）：切入点是指 我们要对哪些Join point进行拦截的定义。通过切入点表达式，指定拦截的方法，比如指定拦截add*、search*。
+
+（5）引入（Introduction）：（也被称为内部类型声明（inter-type declaration））。声明额外的方法或者某个类型的字段。Spring允许引入新的接口（以及一个对应的实现）到任何被代理的对象。例如，你可以使用一个引入来使bean实现 IsModified 接口，以便简化缓存机制。
+
+（6）目标对象（Target Object）： 被一个或者多个切面（aspect）所通知（advise）的对象。也有人把它叫做 被通知（adviced） 对象。 既然Spring AOP是通过运行时代理实现的，这个对象永远是一个 被代理（proxied） 对象。
+
+（7）织入（Weaving）：指把增强应用到目标对象来创建新的代理对象的过程。Spring是在运行时完成织入。
+
+切入点（pointcut）和连接点（join point）匹配的概念是AOP的关键，这使得AOP不同于其它仅仅提供拦截功能的旧技术。 切入点使得定位通知（advice）可独立于OO层次。 例如，一个提供声明式事务管理的around通知可以被应用到一组横跨多个对象中的方法上（例如服务层的所有业务操作）。
+
+### Spring通知有哪些类型？
+
+https://blog.csdn.net/qq_32331073/article/details/80596084
+
+（1）前置通知（Before advice）：在某连接点（join point）之前执行的通知，但这个通知不能阻止连接点前的执行（除非它抛出一个异常）。
+
+（2）返回后通知（After returning advice）：在某连接点（join point）正常完成后执行的通知：例如，一个方法没有抛出任何异常，正常返回。 
+
+（3）抛出异常后通知（After throwing advice）：在方法抛出异常退出时执行的通知。 
+
+（4）后通知（After (finally) advice）：当某连接点退出的时候执行的通知（不论是正常返回还是异常退出）。 
+
+（5）环绕通知（Around Advice）：包围一个连接点（join point）的通知，如方法调用。这是最强大的一种通知类型。 环绕通知可以在方法调用前后完成自定义的行为。它也会选择是否继续执行连接点或直接返回它们自己的返回值或抛出异常来结束执行。 环绕通知是最常用的一种通知类型。大部分基于拦截的AOP框架，例如Nanning和JBoss4，都只提供环绕通知。 
+
+同一个aspect，不同advice的执行顺序：
+
+①没有异常情况下的执行顺序：
+
+around before advice
+before advice
+target method 执行
+around after advice
+after advice
+afterReturning
+
+②有异常情况下的执行顺序：
+
+around before advice
+before advice
+target method 执行
+around after advice
+after advice
+afterThrowing:异常发生
+java.lang.RuntimeException: 异常发生
 
 ### 3.Spring AOP 和 AspectJ AOP 有什么区别？
 
@@ -1792,16 +1923,19 @@ Spring 支持构造器注入和setter 方法注入：
 
 ​	setter 方法注入，通过<property> 元素完成注入（开发中常用）
 
-### 5.Spring 中的单例 bean 的线程安全问题了解吗？
+### Spring 中单例 bean 是线程安全的么？
 
-⼤部分时候我们并没有在系统中使⽤多线程，所以很少有⼈会关注这个问题。
+Spring 框架并没有对单例 bean 进行任何多线程的封装处理。实际上大部分Spring bean 并没有可变的状态（比如service 和 Dao类），所以某种程度上 Spring bean 是线程安全的。
 
-单例 bean 存在线程问题，主要是因为当多个线程操作同⼀个对象的时候，对这个对象的⾮静态成员变量的写操作会存在线程安全问题。
+如果你的Bean 有多种状态的话（比如 View Model 对象），就需要自行保证线程安全，最浅显的解决办法是将单例模式改为原型模式。
 
-**常⻅的有两种解决办法：**
+### :red_circle:Spring 如何处理多线程并发问题？
 
-1. 在Bean对象中尽量避免定义可变的成员变量（不太现实）。
-2. 在类中定义⼀个ThreadLocal成员变量，将需要的可变成员变量保存在 ThreadLocal 中（推荐的⼀种⽅式）。
+**spring 使用ThreadLocal 保证多线程并发安全问题。**
+
+同步机制采用时间换空间，仅提供一份变量，不同线程在访问时需要获取锁，没有获取锁的线程排队等待。
+
+ThreadLocal 采用空间换时间的方式，为每一个线程提供一个独立的变量副本，从而隔离了多个线程之间的访问冲突。从而没有必要对该变量进行同步。
 
 ### **6.spring 支持几种 bean 的作用域？**
 
@@ -1821,46 +1955,131 @@ Java在创建Java实例时，需要进行内存申请；**销毁实例时，需�
 
 ### **7.spring 自动装配 bean 有哪些方式？**
 
-Spring容器负责创建应用程序中的bean同时通过ID来协调这些对象之间的关系。作为开发人员，我们需要告诉Spring要创建哪些bean并且如何将其装配到一起。
+**（一）Spring 框架在XML 配置中有5种自动装配**.
 
-**spring中bean装配有两种方式：**
+- **no** 默认的不进行装配，通过手工设置 ref 属性进行装配
+- **byName** 通过 bean 的名称进行自动装配，如果一个bean的 property 与另一个bean 的name 相同，就进行自动装配
+- **byType** 通过参数的数据类型进行装配
+- **constructor** 利用构造函数进行装配，并且构造函数的参数通过byType进行装配
+- **autodetect** 自动探测，如果有构造方法，通过constructor的方式自动装配，否则使用byType 方式自动装配
 
-- 隐式的bean发现机制和自动装配
-- 在java代码或者XML中进行显示配置
+**（二）基于注解的方式**
 
-当然这些方式也可以配合使用。
+@Autowired 
 
-![image-20201024215330979](C:\Users\hp\Desktop\java面试题\img\image-20201024215330979.png)
+- 在使用此注解之前需要先在配置文件种进行配置，开启注解配置 <context:annotation-config />
+- 在启动Spring IOC 时，容器自动装载了一个 AutowiredAnnotionBeanProcessor 后置处理器，当容器扫描到@Autowired、@Resource或Inject 时，就会在IOC 容器中自动查找需要的bean，并装配给对象属性
 
-### 8.Spring 事务
+### 创建Bean的三种方式
 
-#### 1.spring 事务实现方式有哪些？
+1. 使用默认构造函数创建
 
-1. 编程式事务管理对基于 POJO 的应用来说是唯一选择。我们需要在代码中调用beginTransaction()、commit()、rollback()等事务管理相关的方法，这就是编程式事务管理。
-2. 基于 TransactionProxyFactoryBean 的声明式事务管理
-3. 基于 @Transactional 的声明式事务管理
-4. 基于 Aspectj AOP 配置事务
+   在spring 配置文件中使用 bean 标签，配以id 和class 属性，且没有其他属性和标签时
 
-####  2.**说一下 spring 的事务隔离？**
+   ```java
+   <bean id="accountService" class = "com.ncst.service.impl.AccountServiceImpl"></bean>
+   ```
 
-事务隔离级别指的是一个事务对数据的修改与另一个并行的事务的隔离程度，当多个事务同时访问相同数据时，如果没有采取必要的隔离机制，就可能发生以下问题：
+2. 使用普通工厂中的方法创建对象（工厂方法模式）
+
+   ```java
+   <bean id="instanceFactory" class="com.itheima.factory.InstanceFactory"></bean>
+   <bean id="accountService" factory-bean="instanceFactory" 
+   factory-method="getAccountService"></bean>
+   
+   ```
+
+3. 使用工厂中的静态方法创建对象（简单工厂模式）
+
+   ```java
+   <bean id="accountService" class="com.ncst.factory.StaticFactory" factory-method="getAccountService"></bean>
+   ```
+
+### 注解
+
+#### @Required 注解
+
+![image-20201024220736568](C:\Users\hp\Desktop\java面试题\img\image-20201024220736568.png)
+
+![image-20201024220757015](C:\Users\hp\Desktop\java面试题\img\image-20201024220757015.png)
+
+![image-20201024220821223](C:\Users\hp\Desktop\java面试题\img\image-20201024220821223.png)
+
+#### @Autowired 和@Resource区别？
+
+1. @Autowired 是按照类型装配注入的，默认情况下他要求依赖对象必须存在（required = true）
+2. @Resource 默认是按照名称来装配注入的，只有找不到与名称匹配的 bean 才会按照类型装配注入。
+
+#### @Qualifier注解的作用
+
+解决有两个相同类型的bean 使用@Autowired 时不能区分到底使用的是哪种类型，使用了@Qualifier 注解 告诉Spring 容器（按照 byName类型）到底要装配哪个bean
+
+#### @Component 和 @Bean 的区别是什么？
+
+1. 作⽤对象不同:  **@Component 注解作⽤于类**，⽽ @Bean 注解作⽤于⽅法。
+
+2. @Component 通常是通过类路径扫描来⾃动侦测以及⾃动装配到Spring容器中（我们可以使⽤@ComponentScan 注解定义要扫描的路径从中找出标识了需要装配的类⾃动装配到 Spring 的bean 容器中）。
+
+ @Bean 注解通常是我们在标有该注解的⽅法中定义产⽣这个 bean, @Bean 告诉了Spring这是某个类的示例，当我需要⽤它的时候还给我。
+
+3. @Bean 注解⽐  Component 注解的⾃定义性更强，⽽且很多地⽅我们只能通过  @Bean 注解来注册bean。⽐如当我们引⽤第三⽅库中的类需要装配到  Spring 容器时，则只能通过@Bean 来实现。
+
+### 8.Spring 事务种类
+
+Spring 事务的本质其实就是数据库对事务的支持，没有数据库的事务支持，Spring 是无法提供事务功能的。
+
+**（1）Spring 事务的种类**
+
+*Spring 支持编程式事务管理和声明式事务管理两种方式：*
+
+**编程式事务管理** trancactionTemplate 
+
+- 我们需要在代码中调用beginTransaction()、commit()、rollback()等事务管理相关的方法
+
+**声明式事务管理** 
+
+- 声明式事务管理建立在AOP 之上，其本质是通过AOP 功能，对方法前后进行拦截，将事务处理的功能编织到拦截的方法中，也即是目标方法开始之前加入一个事务，在执行目标方法后根据情况提交或者回滚事务。
+- 声明式事务的优点是不需要在业务逻辑代码中掺杂事务管理的代码，只需要配置相关的事务规则声明或通过@Transactional注解的方式，便可以将事务规则应用到逻辑中。
+- 声明式管理优于编程式事务管理，这正符合Spring 倡导的非侵入式的开发方式
+
+### **:red_circle:Spring 事务传播行为**
+
+当多个事务同时存在的时候，Spring 如何处理这些事务的行为
+
+ :yellow_heart:**propagation(传播)**
+
+**PROPAGATION_REQUIRED：**如果当前存在事务，就加入该事务；如果当前没有事务，就创建一个新事务（这个是最常用的配置）
+
+**PROPAGATION_SUPPORTS**: 支持当前事务。如果当前存在事务，就加入事务；不存在以非事务执行。:yellow_heart:**supports(支持的)**
+
+**PROPAGATION_MANDATORY**:强制执行事务。如果当前存在事务，就加入事务；不存在就抛出异常。:yellow_heart:**mandatory（强制的）**
+
+**PROPAGATION_REQUIRES_NEW** 创建新事务。无论是否存在事务，都新建事务
+
+**PROPAGATION_NOT_SUPPORTED** 以非事务的方式执行操作，如果当前存在事务，则将当前事务挂起
+
+**PROPAGATION_NEVER** 以非事务的方式执行，如果当前存在事务，则抛出异常
+
+**PROPAGATION_NESTED** 如果存在事务，则按嵌套事务执行。如果当前没有事务，则按REQUIRED属性执行 :yellow_heart:nested（嵌套的）
+
+### **:red_circle:Spring 中的隔离级别**
+
+**ISOLATION_DEFAULT** 使用数据库默认隔离级别
+
+**ISOLATION_READ_UNCOMMITTED** 读未提交 ，允取另一个事务可以看到这个事务未提交的数据
+
+**ISOLATION_READ_COMMITTED** 读已提交，保证一个事务修改的数据提交后，其他事物才可以读取，而且能看到该事务对已有记录的更新
+
+**ISOLATION_REPEATABLE_READ**：可重复读，保证要给事务修改的数据提交后才能被另一个事务读取，但是不能看到该事务对已有记录的更新
+
+**ISOLATION_SERIALIZABLE：**一个事务在执行的过程中完全看不到其他事务对数据库所做的更新。
 
 - 脏读：一个事务读到另一个事务**未提交**的更新数据。
 - 幻读：事务A 按照一定条件进行数据读取， 期间事务B 插入了相同搜索条件的新数据，事务A再次按照原先条件进行读取时，发现了事务B 新插入的数据 称为幻读
 
 - 不可重复读：比方说在同一个事务中先后执行两条一模一样的select语句，期间在此次事务中没有执行过任何DDL语句，但先后得到的结果不一致，这就是不可重复读。
 
-![image-20201028225735587](C:\Users\hp\Desktop\java面试题\img\image-20201028225735587.png)
-
-#### 3.Spring 事务中哪⼏种事务传播⾏为?
-
-propagation  n. 传播；繁殖；增殖 
-
-![image-20201028230206919](C:\Users\hp\Desktop\java面试题\img\image-20201028230206919.png)
-
-![image-20201028230347970](C:\Users\hp\Desktop\java面试题\img\image-20201028230347970.png)
-
-#### 4.@Transactional(rollbackFor = Exception.class)注解了解吗？
+### @Transactional(rollbackFor = Exception.class)注解了解吗？
 
 我们知道：Exception分为运⾏时异常 RuntimeException和⾮运⾏时异常。
 
@@ -1876,7 +2095,7 @@ propagation  n. 传播；繁殖；增殖
 
 **BeanFactory 是一个Bean工厂**，使用简单工厂模式，是Spring IoC的顶级接口，可以理解为含有Bean 集合的工厂类，作用是管理Bean，包括实例化、定位、配置对象及建立这些对象的依赖。
 
-BeanFactory 实例化后并不会自动实例化Bean，**只有 当Bean 被使用时才实例化与装配依赖关系，属于延迟加载，适合多例模式**
+BeanFactory 实例化后并不会**自动实例化Bean**，**只有 当Bean 被使用时才实例化与装配依赖关系，属于延迟加载，适合多例模式**
 
 ------
 
@@ -1898,117 +2117,102 @@ BeanFactory 实例化后并不会自动实例化Bean，**只有 当Bean 被使�
 2. 基于注解的配置
 3. 基于java的配置                                                    
 
-### 16.请解释Spring Bean 的生名周期
+### :red_circle:请解释Spring Bean 的生命周期
 
-在一个bean  实例化时，需要执行一系列的初始化操作以达到可用的状态。同样的，当一个bean不在被调用的时需要进行相关的析构操作，并从bean 容器中移除
+首先说一下 Servlet 的生命周期：实例化、初始化init、接受请求service、销毁destory
 
-Spring bean factory 负责管理在spring 容器中被创建的bean 的生命周期。bean 的声明周期由两组回调（call back） 方法组成
+**Spring Bean的生命周期** 
 
-1. 初始化之后调用的回调方法
-2. 销毁之前调用的回调方法
+**（1）实例化Bean**
 
-spring 框架提供了以下4种方式来管理bean 的声明周期事件
+对于BeanFactory 容器，当客户容器请求一个尚未初始化的bean 时或初始化bean 需要注入另一个尚未初始化的依赖时，容器就会调用 createBean 进行实例化。
 
-1. InitializingBean 和 DisposableBean 回调接口
-2. 针对特殊行为的其他Aware接口
-3. Bean配置文件中的Custom initial() 方法和 destroy() 方法
-4. @PostConstruct 和@PreDestory 注解方式
+对于ApplicationContext 容器，当容器启动结束后，通过获取BeanDefinition对象中的信息，实例化所有的bean。
 
-![image-20201024214613037](C:\Users\hp\Desktop\java面试题\img\image-20201024214613037.png)
+**（2）设置对象属性（依赖注入）**
 
-### 17.请解释自动装配模式的区别
+实例化后对象被封装到 BeanWrapper对象中，紧接着，Spring根据BeanDefinition 中的信息以及通过 BeanWrapper 提供的设置属性的接口完成依赖注入
 
-![image-20201024220342877](C:\Users\hp\Desktop\java面试题\img\image-20201024220342877.png)
+**（3）处理Aware 接口**
 
-### 18.如何开启基于注解的自动装配
+*接着Spring 会检测该对象是否实现了 XXXAware 接口，并将相关的XXXAware实例注入给 Bean*
 
-![image-20201024220435607](C:\Users\hp\Desktop\java面试题\img\image-20201024220435607.png)
+1. 如果这个Bean 实现了 BeanNameAware 接口 ，将会调用 setBeanName(String beanId) 方法，（此处传递的就是Spring 配置文件中 Bean 的ID 值）
+2. 如果这个Bean 实现了 BeanFactoryAware接口，将会调用setBeanFactory（）方法，传递的是Spring 工厂自身
+3. 如果这个Bean 实现了 ApplicationContextAware 接口，会调用setApplicationContext（ApplicationContext） 方法，传入Spring 上下文。
 
-### 19.请举例解释@Required 注解
+**（4）BeanPostProcessor**
 
-![image-20201024220736568](C:\Users\hp\Desktop\java面试题\img\image-20201024220736568.png)
+如果想对 Bean 进行一些自定义的处理，那么可以让Bean 实现此接口。
 
-![image-20201024220757015](C:\Users\hp\Desktop\java面试题\img\image-20201024220757015.png)
+**（5）InitializationBean 与 init-method**
 
-![image-20201024220821223](C:\Users\hp\Desktop\java面试题\img\image-20201024220821223.png)
+如果在配置文件中配置了init-method ，则会自动调用其配置的初始化方法
 
-### 20.@Autowired注解
+**（6）BeanPostProcessor**
 
-![image-20201024221038629](C:\Users\hp\Desktop\java面试题\img\image-20201024221038629.png)
+如果这个Bean 实现了BeanPostProcessor 接口，将会调用 postProcessAfterInitialization（Object obj, String s）方法。由于这个方法是在初始化结束后调用的，所以可以**被用于缓存或内存技术**，
 
-![image-20201024221134400](C:\Users\hp\Desktop\java面试题\img\image-20201024221134400.png)
+**（7）DisposableBean**
 
-### 21.@Qualifier注解
+- 当Bean 不需要时，会经过清理阶段，如果 Bean 实现了 DisposableBean这个接口，会调用其实现的destory()方法。
 
-![image-20201024221241737](C:\Users\hp\Desktop\java面试题\img\image-20201024221241737.png)
+**（8）destory-method**
 
-![image-20201024221302988](C:\Users\hp\Desktop\java面试题\img\image-20201024221302988.png)
+- 如果这个Bean 的Spring 配置中配置了destory-method 属性，会自动调用其配置销毁方法
+
+![image-20201028222831174](C:\Users\hp\Desktop\java面试题\img\image-20201028222831174.png)
+
+
 
 ### 22.构造方法注入和设值注入有什么区别？
 
 ![image-20201024221628749](C:\Users\hp\Desktop\java面试题\img\image-20201024221628749.png)
 
-### 23.Spring 框架中有哪些不同类型的事件
+### Spring 框架中有哪些不同类型的事件
 
-![image-20201024222737876](C:\Users\hp\Desktop\java面试题\img\image-20201024222737876.png)
+Spring 提供了以下5种标准的事件：
 
-![image-20201024222817539](C:\Users\hp\Desktop\java面试题\img\image-20201024222817539.png)
+（1）上下文更新事件（ContextRefreshedEvent）：在调用ConfigurableApplicationContext 接口中的refresh()方法时被触发。
 
-![image-20201024222931354](C:\Users\hp\Desktop\java面试题\img\image-20201024222931354.png)
+（2）上下文开始事件（ContextStartedEvent）：当容器调用ConfigurableApplicationContext的Start()方法开始/重新开始容器时触发该事件。
 
-![image-20201024222952698](C:\Users\hp\Desktop\java面试题\img\image-20201024222952698.png)
+（3）上下文停止事件（ContextStoppedEvent）：当容器调用ConfigurableApplicationContext的Stop()方法停止容器时触发该事件。
+
+（4）上下文关闭事件（ContextClosedEvent）：当ApplicationContext被关闭时触发该事件。容器被关闭时，其管理的所有单例Bean都被销毁。
+
+（5）请求处理事件（RequestHandledEvent）：在Web应用中，当一个http请求（request）结束触发该事件。
+
+如果一个bean实现了ApplicationListener接口，当一个ApplicationEvent 被发布以后，bean会自动被通知。
 
 ### 24.FileSystemResource 和 ClassPathResource 有何区别
 
 ![image-20201024223132591](C:\Users\hp\Desktop\java面试题\img\image-20201024223132591.png)
 
-### 25.Spring 框架中都用到了哪些设计模式
+### Spring 中用到了哪些设计模式？
 
-1.工厂模式（BeanFactory用来创建对象的实例）
+工厂模式：BeanFactory 就是工厂模式的实现，Spring 通过 BeanFactoy 创建 Bean
 
-2.单例模式（Spring中默认bean为单例）
+单例模式：Spring 默认Bean 是单例的
 
-3.适配器模式（HandlerAdapter Spring MVC 前端控制器发来的请求经过HandlerAdapter 处理器适配后调用具体的Controller）
+适配器模式：
 
-4.装饰者模式
+-  Spring 的Aop 中，通知 （advice）通过适配器实现的，AdvisorAdapter
+- HandlerAdapter Spring MVC 前端控制器发来的请求经过HandlerAdapter 处理器适配后调用具体的Controller
 
-5.代理模式（AOP中用到 JDK 动态代理）
+包装器模式
 
-6.观察者模式（listener的实现，例如ApplicationListener）
+代理模式：Spring AOP 中 JDKDynamicAopProxy 和Cglib2AopProxy使用到了代理模式
 
-7.策略模式（定义一系列的算法，把它们一个个的封装起来，并且使它们可以相互替换。在实例化对象时用到）
+观察者模式：Spring 中的监听器，ApplicationListener
 
-8.模板模式（jdbcTemplate、RestTemplate、JmsTemplate、JpaTemplate）
+策略模式:（定义一系列的算法，把它们一个个的封装起来，并且使它们可以相互替换。在实例化对象时用到）
 
-### 26.@Component 和 @Bean 的区别是什么？
+模板方法模式：jdbcTemplate、RestTemplate、JmsTemplate、JpaTemplate
 
-1. 作⽤对象不同:  **@Component 注解作⽤于类**，⽽ @Bean 注解作⽤于⽅法。
+### Spring 如何解决循环依赖？
 
-2.  @Component 通常是通过类路径扫描来⾃动侦测以及⾃动装配到Spring容器中（我们可以使⽤@ComponentScan 注解定义要扫描的路径从中找出标识了需要装配的类⾃动装配到 Spring 的bean 容器中）。
-
- @Bean 注解通常是我们在标有该注解的⽅法中定义产⽣这个 bean, @Bean 告诉了Spring这是某个类的示例，当我需要⽤它的时候还给我。
-
-3. @Bean 注解⽐  Component 注解的⾃定义性更强，⽽且很多地⽅我们只能通过  @Bean 注解来注册bean。⽐如当我们引⽤第三⽅库中的类需要装配到  Spring 容器时，则只能通过@Bean 来实现。
-
-### 27.Spring 中的 bean ⽣命周期?
-
-![image-20201105100341944](C:\Users\hp\Desktop\java面试题\img\image-20201105100341944.png)
-
-![image-20201028222717127](C:\Users\hp\Desktop\java面试题\img\image-20201028222717127.png)
-
-![image-20201028222734581](C:\Users\hp\Desktop\java面试题\img\image-20201028222734581.png)
-
-![image-20201028222831174](C:\Users\hp\Desktop\java面试题\img\image-20201028222831174.png)
-
-### 28.Spring 配置 bean 实例化有哪些方式
-
-![image-20201105100214242](C:\Users\hp\Desktop\java面试题\img\image-20201105100214242.png)
-
-### 29.Spring 如何处理线程并发问题？ThreadLocal
-
-![image-20201105104228541](C:\Users\hp\Desktop\java面试题\img\image-20201105104228541.png)
-
-![image-20201105104243796](C:\Users\hp\AppData\Roaming\Typora\typora-user-images\image-20201105104243796.png)
+Spring 通过内部维护三个 map 
 
 ## ⭐Spring MVC⭐
 
@@ -3140,6 +3344,60 @@ maxQueueSize，最大的等待队列数，超过则拒绝请求
 
 ![image-20201203201622578](C:\Users\hp\Desktop\java面试题\img\image-20201203201622578.png)
 
+### String Table
+
+#### 改变
+
+Jdk7 从方法区移动到堆空间。
+
+jdk 9 String 的由 char[] 数组 更改为 byte[] 数组，节约了一些空间
+
+```java
+// jdk 1.9 之前
+private final char value[];
+// jdk 1.9之后
+private final byte[] value
+```
+
+#### String 不可变性
+
+- 当对字符串进行赋值时，需要重新指定内存区域赋值，不能使用原有 value 赋值
+- 当现有字符串进行连接操作时，当使用String 的replace（）方法修改指定字符或字符串时，需要指定内存区域进行赋值，不能使用原有value赋值
+- 通过字面量的方式（区别于new）给一个字符串赋值，此时的字符串值声明在字符串常量池中 
+
+#### String Pool（字符串常量池）
+
+字符串常量池是一个固定大小的HashTable ,默认大小长度为1009 。
+
+**常量池类似一个Java系统级别的缓存** 。8种基本数据结构类型的常量池都是系统协调的
+
+- 直接使用 " " 双引号声明出来的String 对象会直接存储在常量池中
+
+```java
+String str = " hello JVM"; //存储在常量池中
+```
+
+- 如果不适用双引号，可以使用String.intern()方法。
+
+#### 为什么String Table 移动到堆中？
+
+因为永久代默认比较小
+
+永久代的垃圾回收频率低
+
+#### String intern 的使用
+
+**jdk1.6 ，将这个字符串对象尝试放入串池**
+
+- 如果池中存在，则并不会放入，返回已有的串池中的地址
+- 如果没有，**会把对象复制一份**，放入串池，并返回串池中的对象地址
+
+**jdk1.7 ，将这个字符串尝试放入池中**
+
+- 如果池中存在，则并不会放入，返回已有的串池中的地址
+
+- 如果没有，**会把对象的引用地址复制一份**，放入串池，并返回串池中的引用地址。
+
 ### :evergreen_tree:JDK1.8和JDk1.7JVM内存区域的区别？
 
 - JDK1.8 和 JDK1.7 内存区域的区别是方法区不在放在堆空间中，而是放到本地内存中，解决了方法区报OOM的风险
@@ -3366,6 +3624,16 @@ survivor区的年龄到达默认值（15）就会被转移到老年代。或者�
 
 方法区满报 OutofMemoryError
 
+#### 方法区的演进细节
+
+![image-20201203220259464](C:\Users\hp\Desktop\java面试题\img\image-20201203220259464.png)
+
+![image-20201203215640981](C:\Users\hp\Desktop\java面试题\img\image-20201203215640981.png)
+
+![image-20201203215700862](C:\Users\hp\Desktop\java面试题\img\image-20201203215700862.png)
+
+![image-20201203215716645](C:\Users\hp\Desktop\java面试题\img\image-20201203215716645.png)
+
 #### 运行时常量池
 
 运行时常量池是方法区/元空间的一部分，
@@ -3402,16 +3670,6 @@ JVM 为每个已加载的类型（类或接口）都维护一个常量池。池�
 #### 堆、栈、方法区的关系
 
 ![image-20201203203214466](C:\Users\hp\Desktop\java面试题\img\image-20201203203214466.png)
-
-#### 方法区的演进细节
-
-![image-20201203220259464](C:\Users\hp\Desktop\java面试题\img\image-20201203220259464.png)
-
-![image-20201203215640981](C:\Users\hp\Desktop\java面试题\img\image-20201203215640981.png)
-
-![image-20201203215700862](C:\Users\hp\Desktop\java面试题\img\image-20201203215700862.png)
-
-![image-20201203215716645](C:\Users\hp\Desktop\java面试题\img\image-20201203215716645.png)
 
 #### 为什么永久代要被元空间替代？
 
@@ -3486,28 +3744,227 @@ JVM 为每个已加载的类型（类或接口）都维护一个常量池。池�
 
 - 本地方法栈和虚拟机栈相似，只不过它的实现是native方法。
 
-### 描述一下JVM加载class文件的原理机制? 
+### 描述一下类加载过程？
 
-​	JVM中类的装载是由ClassLoader和它的子类来实现的,Java ClassLoader 是一个重要的Java运行时系统组件。它负责在运行时查找和装入类文件的类。
+类加载过程分为加载、链接、准备、解析、初始化、使用、卸载
 
-### 试举例说明一个典型的垃圾回收算法？ 
+**类加载：**通过一个类的全限定类名获取类的二进制流，将这个字节流所代表的静态存储结构转化为方法区的运行时数据区。在内存中生成一个代表这个类的java.lang.Class 对象，作为方法区这个类的访问入口。
 
-Java语言规范没有明确地说明JVM使用哪种垃圾回收算法，但是任何一种垃圾收集算法一般要做2件基本的事情：
+**链接：**验证class 文件是否符合虚拟机要求，保证被加载类的正确性。
 
-（1）发现无用信息对象；
+**准备：**为类变量分配内存，并且设置该类变量的默认初始值
 
-（2）回收被无用对象占用的内存空间，使该空间可被程序再次使用。
+**解析：**将常量池中符号引用转化为直接引用（直接指向目标的指针、相对偏移量、或者一个间接定位到目标的句柄）。
 
-大多数垃圾回收算法使用了根集(root set)这个概念；所谓根集就量正在执行的Java程序可以访问的引用变量的集合(包括局部变量、参数、类变量)，程序可以使用引用变量访问对象的属性和调用对象的方法。垃圾收集首选需要确定从根开始哪些是可达的和哪些是不可达的，从根集可达的对象都是活动对象，它们不能作为垃圾被回收，这也包括从根集间接可达的对象。而根集通过任意路径不可达的对象符合垃圾收集的条件，应该被回收。
+**初始化**：给类变量显示赋值，给静态代码块赋值。
 
-下面介绍几个常用的算法。
-**引用计数法(Reference Counting Collector)**
-引用计数法是唯一没有使用根集的垃圾回收算法，该算法使用引用计数器来区分存活对象和不再使用的对象。一般来说，堆中的每个对象对应一个引用计数器。当每一次创建一个对象并赋给一个变量时，引用计数器置为1。当对象被赋给任意变量时，引用计数器每次加1。当对象出了作用域后(该对象丢弃不再使用)，引用计数器减1，一旦引用计数器为0，对象就满足了垃圾收集的条件。
-基于引用计数器的垃圾收集器运行较快，不会长时间中断程序执行，适宜地必须 实时运行的程序。但引用计数器增加了程序执行的开销，因为每次对象赋给新的变量 ，计数器加1，而每次现有对象出了作用域生，计数器减1。
+### 简述类加载机制？
+
+JVM把描述类的数据从 class文件加载到内存，并对其进行数据检验，解析，初始化，最终可以形成虚拟机直接使用的 java 类型
+
+### 描述一下类加载器？
+
+![image-20201204123221047](C:\Users\hp\Desktop\java面试题\img\image-20201204123221047.png)
+
+启动类加载器、扩展类加载器、应用类加载器、用户类自定义加载器
+
+**启动类加载器**
+
+- 使用C\C++语言实现的，嵌套在 JVM 内部，无法被java程序直接引用
+
+**扩展类加载器**
+
+- 父类加载器是启动类加载器
+
+- 由java实现，用于加载 java 扩展库
+- 用户创建的jar 放在此目录下，也会由扩展类加载器加载
+- 从java.ext.dirs 系统属性所指定的目录加载类库，或从jdk 安装目录 jre/lib/ext 子目录下加载类库
+
+**应用类加载器：**
+
+- 父类加载器为扩展类加载器
+
+- 他负责加载环境变量 ClassPath 或系统属性 java.class.path 指定路径下的类库。
+- 是程序中默认的类加载器，一般的java类都是由它来加载的
+
+**用户类自定义加载器：**通过继承 java.lang.ClassLoader 类的方式实现。
+
+### 如何实现自定义加载器？
+
+有时我们想要**实现自己的类加载器**，但是不想打破双亲委派机制，那么我们可以
+
+1. 继承自ClassLoader
+2. 重写 findclass 方法，在findclass 里获取类的字节码，并调用ClassLoader中的defineClass方法加载类，获取class 对象。
+
+有时我们想要**实现自己的类加载器**，打破双亲委派机制，那么我们可以
+
+- 重写loadClass 方法
+
+### JVM的永久代中会发生垃圾回收么？
+
+永久代不会发生垃圾回收，当永久代满时会发生FullGC
+
+### 什么是双亲委派机制？
+
+当一个类收到类加载请求时，它会判断父类是否可以被加载，依次向上委派。如果父类加载不了，则让其子类加载。
+
+### 聊聊垃圾回收算法？
+
+**标记-清除算法**
+
+- 标记清除算法分为标记和清除，标记阶段从根节点开始遍历，标记所用被引用的对象，
+- 清除阶段会把那些没有标记的节点进行清除
+- 标记清除算法的效率不高，会产生碎片
+
+**标记-复制算法**
+
+- 将内存区域分成两块，每次只使用一块，在GC时将存活的对象复制到另一个区域，清除存在垃圾区域的全部空间，交换两个空间的位置，重复进行此操作
+- 解决了碎片的产生，内存空间只可以使用一半，适合新生代垃圾收集。
+- 对于G1这种存在大量 Region 的GC，复制而不是移动。意味者GC需要维护region之间对象的引用关系，不管是内存占用还是时间开销都不小。
+
+**标记-整理算法**
+
+- 标记整理算法分为两部分，
+- 第一阶段进行对象的可达标记，第二阶段将所有存活的对象压缩到内存的一端，之后清理边界外的所有的空间。
+- 适合于老年代，存活对象时间长，回收频率低。
+- 缺点是会造成STW，效率低于标记复制算法。
+
+### 引用计数法和可达性分析算法？
+
+**引用计数算法：**
+
+- 为每个对象设置一个引用计数器，对于对象A，任何对象引用了A，A的引用计数器 + 1，只要引用计数器减为0，即可被垃圾回收。
+- 优点实现简单，
+- 缺点会造成循环引用。
+
+**可达性分析算法**
+
+- 以根节点为起点，从上到下进行搜索，判断对象是否可达，把可达的对象标记起来。
+- 回收时，将不在引用链上的对象进行回收
+
+### 垃圾回收器
+
+#### **serial 回收器 **
+
+- 串行回收，采用复制算法，适用于年轻代，会造成STW，client 端的默认新生代垃圾收集器
+
+**serial old 回收器：**串行回收，会造成STW，使用标记压缩算法，作为老年代CMS  的后备垃圾收集方案
+
+**parNew 回收器** 
+
+- 采用并行方式回收垃圾，采用复制算法。
+- 是server 端下面默认的新生代垃圾回收器。
+- 目前和CMS搭配使用
+
+**对于新生代，回收频率频繁，使用并行可以提高回收效率**
+
+**对于老年代，回收频率不频繁，使用串行比较高效（节省了切换线程所消耗的资源）**
+
+#### **parallel Scavenge回收器** 
+
+*在java8 默认是此垃圾收集器*
+
+- 采用复制算法，注重吞吐量优先，具有自适应调节功能，适用于新生代
+- **年轻代的大小、Eden、survivor 区的比例、晋升老年代的对象年龄等参数会自动调整，为了达到堆大小、吞吐量、停顿时间的平衡点**
+
+**parallel Old**  在java8 默认是此垃圾收集器
+
+- 老年代版本，采用标记压缩算法 
+
+### **CMS回收器**
+
+#### 参数
+
+使用率阈值：jdk 5 之前默认值为68   即老年代为92%	
+
+**CMS（concurrent mark sweep）**
+
+优点：并发收集、低延迟
+
+缺点：产生碎片、无法处理浮动垃圾
+
+- 是一款真正意义上的并发收集器，让垃圾收集线程与用户线程同时工作。
+- 采用标记-清除算法，CMS 关注点是**尽可能缩短垃圾收集时用户线程停顿的时间**
+- 作为老年代垃圾收集器只能与ParNew 和 serial 配合实用
+
+#### **CMS 垃圾收集分为4个阶段**
+
+**初始标记（STW）**：标记出GCRoots 能直接关联到的对象，由于直接关联对象比较小，这里的速度非常快。
+
+**并发标记**：从GCRoots 直接关联的对象遍历整个对象图的过程，这个过程耗时长，但是不需要占用用户线程，和垃圾收集器线程一起运行。
+
+**重新标记（STW）**：由于并发标记程序一值运行，会产生新的对象，因为修正并发标记期间产生变动的那一部分对象的变更记录，这个阶段比初始标记时间长，比并发标记时间短。
+
+**并发清除**：清理掉标记阶段已死亡的对象。
+
+#### CMS为什么无法处理浮动垃圾？
+
+因为在并法标记过程中，程序的工作线程和垃圾收集器是同时运行或者交叉运行的，在并发标记过程中，如果产生新的垃圾对象，CMS将无法对这些垃圾对象进行标记，导致垃圾不能得到及时的回收，只能等到下一次GC
+
+#### 为什么CMS不在堆满时进行垃圾回收？
+
+CMS并不会等到堆空间满时触发垃圾回收，因为在并行标记过程中，程序是一值运行的，此时并发标记也需要内存空间，当在垃圾回收时内存空间不足时会报 Concurrent  Mode Failure。此时会启动后备方案，实用serial old收集器代替老年代收集，这样停顿时间会大大增加
+
+#### CMS为什么不采用标记整理算法？
+
+因为标记整理算法会占用用户线程。
 
 
 
-------
+### G1 垃圾收集器
+
+#### 特点
+
+- G1（garbage first）**垃圾优先**
+- 在**延迟可控**的情况下获得**尽可能高的吞吐量**
+
+#### **G1垃圾回收器的优势**
+
+**1.并发与并行**
+
+- 并行性：G1回收期间，可以多个GC线程同时工作，有效利用多线核计算能力，此时用户线程STW
+- 并发性：G1拥有与用户线程交替执行的能力，部分工作可以和线程同时执行。因此一般来说，不会在整个回收阶段完全阻塞应用程序的情况。
+
+**2.分代收集**
+
+- 从分代看：G1依然属于分代型垃圾收集器，分为年轻代、老年代、年轻代依然存在Eden和两个 survivor区。
+- 从堆看：他不要求整个Eden区、survivor区是连续的，也不设置固定大小和固定数量。
+- 将堆分为若干个空间这些空间包含逻辑上的年轻代和老年代
+- G1垃圾收集器同时兼顾年轻代和老年代
+
+**3.可预测的停顿时间模型**
+
+- G1除了追求低停顿外，还能建立可预测的停顿时间模型，这能让使用者明确指定一个长度为M 毫秒的时间片段内，消耗在垃圾收集时间上不超过 N 毫秒。
+- 由于分区的原因G1 可以选择部分区域进行回收，这样缩小了回收范围，因此对于全局停顿情况的发生具有较好的控制
+- **G1追踪各个Region里面的垃圾堆积的大小**（回收所获得空间大小以及回收所需的经验值），在后台维护一个优先列表，每次根据允许的收集时间，**优先回收价值最大的Region**。
+
+#### **G1垃圾收集器的缺点**
+
+- 在程序的运行过程中，G1垃圾收集器的内存占用和程序运行时额外负载都要比CMS高
+
+### G1垃圾回收过程
+
+![image-20201204212735948](C:\Users\hp\Desktop\java面试题\img\image-20201204212735948.png)
+
+Young GC ==》 YoungGC + 并发标记过程 ==》混合回收 ==》FullGC 
+
+### G1和CMS的区别？
+
+CMS基于标记-清除算法，会产生内存碎片、若干次GC后进行依次碎片整理
+
+G1将内存划分为一个个的Region，内存的回收是以Region为单位，Region之间是复制算法。避免产生内存碎片。有助于程序长时间运行。分配大对象不会因无法找到连续合适的存储空间而触发下一次GC，尤其是当分配堆特别大时，G1的优势特别明显。
+
+**G1适合大内存应用场景、CMS适合小内存应用**
+
+### 垃圾回收器总结
+
+![image-20201204213125734](C:\Users\hp\Desktop\java面试题\img\image-20201204213125734.png)
+
+最小化实用内存和并行开销：Serial GC
+
+最大化的应用吞吐量：Parreal Scavenge GC
+
+最小化GC的中断和停顿时间 CMS GC
 
 ------
 
