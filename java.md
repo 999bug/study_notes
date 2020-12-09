@@ -325,6 +325,8 @@ Apache
 
 #### 2.描述下你的系统架构
 
+![1525703759035](C:\Users\hp\Desktop\java面试题\img\1525703759035.png)
+
 **技术架构：**
 
 ​		本项目使用 (Spring Boot + Spring Cloud + Mybatis) 框架开发。采用分布式的系统架构，前端使用Vue.js 等框架进行开发，前端请求经过 Nginx 转发。全部请求都要经过网关进行处理和权限的鉴定，不同权限的用户访问不同的微服务，比如商家管理系统和运维管理系统。请求再次由网关进行转发，使用Ribbon 负载均衡，并用Hystix 进行熔断处理。微服务之间采用消息队列通信，持久层使用Mysql 和 Redis 进行数据存储。门户页面使用 Electricsearch 进行搜索。
@@ -640,6 +642,60 @@ SSDB/Redis分片使用如Twemproxy，这样不管使用Java还是Nginx+Lua，它
 
 ![image-20201109192655944](C:\Users\hp\Desktop\java面试题\img\image-20201109192655944.png)
 
+### 秒杀系统面试总结
+
+#### 商品超卖问题
+
+在商品表中添加一个版本号字段，减库存业务时，通过商品id获取商品的版本号，在减库存操作时,先判断查询的verison 是否一致，一致则减库存成功。写入秒杀订单。
+
+```
+update set seckill_goods stock = stock - 1, version = version + 1 
+where id = #{goodsId} and stock > 0 and version = #{version}
+```
+
+#### 令牌桶算法
+
+限流是对某一时间窗口内的请求数进行限制，保持系统的可用性和稳定性，防止因流量暴增而导致的系统运行缓慢或宕机。常用的限流算法有令牌桶和和漏桶，而Google开源项目Guava中的RateLimiter使用的就是令牌桶控制算法。
+
+在开发高并发系统时有三把利器用来保护系统：缓存、降级和限流
+
+- 缓存：缓存的目的是提升系统访问速度和增大系统处理容量
+- 降级：降级是当服务器压力剧增的情况下，根据当前业务情况及流量对一些服务和页面有策略的降级，以此释放服务器资源以保证核心任务的正常运行
+- 限流：限流的目的是通过对并发访问/请求进行限速，或者对一个时间窗口内的请求进行限速来保护系统，一旦达到限制速率则可以拒绝服务、排队或等待、降级等处理
+
+我们经常在调别人的接口的时候会发现有限制，比如微信公众平台接口、百度API Store、聚合API等等这样的，对方会限制每天最多调多少次或者每分钟最多调多少次
+
+我们自己在开发系统的时候也需要考虑到这些，比如我们公司在上传商品的时候就做了限流，因为用户每一次上传商品，我们需要将商品数据同到到美团、饿了么、京东、百度、自营等第三方平台，这个工作量是巨大，频繁操作会拖慢系统，故做限流。
+
+以上都是题外话，接下来我们重点看一下令牌桶算法
+
+#### 整体流程
+
+- 前端页面采用隐藏秒杀地址和使用随机秒杀地址来防止用户恶意刷接口，点击秒杀时会让用户输入数字计算验证码，输入正确后进入后端业务逻辑。
+
+
+后端业务逻辑分为生产者和消费者。
+
+**生产者**
+
+1. 生产者**首先进行预加载**，查询所有的商品列表，把每一个商品根据商品ID 和 库存容量 加入到redis 中，其次做一个内存标记，使用hashMap，将每一个商品id 都标记为 false。
+2. 使用令牌桶算法对其进行限流，保证系统的稳定性，防止流量暴增导致系统不可用
+3. 判断刚刚随机生成的路径是否正确，然后在判断该商品是否已经卖出根据内存标记，如果都满足那么在redis中预减库存（因为初始化时，每一个商品Id和库存都存入redis中）
+4. 判断库存是否小于 0 ，如果不小于0说明减库存成功，
+5. 接着判断是否秒杀成功，从redis 中根据用户id 和商品id查询，如果存在说明该用户已经秒杀，不能重复秒杀
+6. 加入MQ，将用户id 和商品ID封装成对象序列化成JSON 字符串。
+
+**消费者**
+
+1. 从队列中数据，将JSON字符串转换为对象，取出用户ID 和商品Id
+2. 从数据库中判断库存是否 <= 0,如果小于 0 说明库存为0直接返回。
+3. 从缓存中查看该订单是否秒杀到，如果秒杀到直接返回。没有秒杀到在缓存中写入该秒杀订单
+4. 执行秒杀事务，先判断减库存是否成功，如果成功写入秒杀订单。
+
+#### 秒杀系统流程图
+
+![秒杀系统流程图 (1)](C:\Users\hp\Desktop\java面试题\img\秒杀系统流程图 (1).png)
+
 ### 秒杀模块
 
 #### 1.简单介绍下你的项目
@@ -722,6 +778,19 @@ Selector 进行监听 select 方法 返回有事件发生的通道个数
 
 ![image-20201003214954049](C:\Users\hp\Desktop\java面试题\img\image-20201003214954049.png)
 
+### Java集合的快速失败机制 “fail-fast”？
+
+是java集合的一种错误检测机制，当多个线程对集合进行结构上的改变的操作时，有可能会产生 fail-fast 机制。
+
+例如：假设存在两个线程（线程1、线程2），线程1通过Iterator在遍历集合A中的元素，在某个时候线程2修改了集合A的结构（是结构上面的修改，而不是简单的修改集合元素的内容），那么这个时候程序就会抛出 ConcurrentModificationException 异常，从而产生fail-fast机制。
+
+原因：迭代器在遍历时直接访问集合中的内容，并且在遍历过程中使用一个 modCount 变量。集合在被遍历期间如果内容发生变化，就会改变modCount的值。每当迭代器使用hashNext()/next()遍历下一个元素之前，都会检测modCount变量是否为expectedmodCount值，是的话就返回遍历；否则抛出异常，终止遍历。
+
+解决办法：
+
+1. 在遍历过程中，所有涉及到改变modCount值得地方全部加上synchronized。
+2. 使用CopyOnWriteArrayList来替换ArrayList
+
 ### **2.Collection 和 Collections 有什么区别？**
 
 - java.util.Collection 是一个集合接口（集合类的一个顶级接口）。它提供了对集合对象进行基本操作的通用接口方法。
@@ -729,24 +798,35 @@ Selector 进行监听 select 方法 返回有事件发生的通道个数
   - Collection接口的意义是为各种具体的集合提供了最大化的统一操作方式，其直接继承接口有List与Set。
 - Collections则是集合类的一个**工具类/帮助类**，其中提供了一系列静态方法，用于对集合中元素进行**排序、搜索以及线程安全等各种操作**。
 
+### comparable 和 comparator的区别？
+
+- **comparable**来自java.lang包。他有一个compareto（Object obj）方法用来排序
+
+- **comparator** 来自java.util 包，他有一个compare（Object obj1，Object obj2）方法用来排序
+
+### Collection 和 Collections 有什么区别？
+
+- java.util.Collection 是一个集合接口（集合类的一个顶级接口）。它提供了对集合对象进行基本操作的通用接口方法。Collection接口在Java 类库中有很多具体的实现。Collection接口的意义是为各种具体的集合提供了最大化的统一操作方式，其直接继承接口有List与Set。
+- Collections则是集合类的一个工具类/帮助类，其中提供了一系列静态方法，用于对集合中元素进行排序、搜索以及线程安全等各种操作。
+
 ### **3.List、Set、Map 之间的区别是什么？**
 
 ![image-20201003215225756](C:\Users\hp\Desktop\java面试题\img\image-20201003215225756.png)
 
-### **4.HashMap 和 Hashtable 有什么区别？**
+**list** 有序，存入和输出的顺序有序，元素可以重复，底层可以由ArrayList、LinkedList双向链表和Vector实现。
 
-- hashMap去掉了HashTable 的contains方法，但是加上了containsValue（）和containsKey（）方法。
-- hashTable同步的，而HashMap是非同步的，效率上逼hashTable要高。
-- hashMap允许空键值，而hashTable不允许。 
+**set** 无序，存入和输出的顺序无序，元素不可以重复。底层由HashSet、LinkedHashSet、和TreeSet 实现
 
-### **5.如何决定使用 HashMap 还是 TreeMap？**
+**Map** 是一个键值对集合，存储键和值之间的映射。key 是唯一的。
 
-- 对于在Map中插入、删除和定位元素这类操作，HashMap是最好的选择。
-- 然而，假如你需要对一个**有序的key集合进行遍历**，TreeMap是更好的选择。
+- **HashMap**：JDK 1.8 之前 HashMap 由数组+链表组成，数组是主体，链表是为了解决hash冲突而存在的（使用拉链法）。当链表长度大于8时，由链表转换为红黑树，减少搜索次数
+- **LinkedHashMap** ： LinkedHashMap 继承自HashMap。所以它的底层实现和HashMap 相同。LinkedHashMap 在上面的结构上增加了一个双向链表，可以保证插入有序
+- **HashTable** : 数组+ 链表组成，数组是HashMap的主体，链表则是解决hash 冲突的
+- **TreeMap** 由红黑树组成 
 
-基于你的collection的大小，也许向HashMap中添加元素会更快，将map换为TreeMap进行有序key的遍历。
+### :heartpulse:HashMap
 
-### **6.说一下 HashMap 的实现原理？**
+#### **说一下 HashMap 的实现原理？**
 
 HashMap概述：HashMap是基于哈希表的Map接口的非同步实现。此实现提供所有可选的映射操作，并允许使用null值和null键。此类不保证映射的顺序，特别是它不保证该顺序恒久不变。 
 
@@ -768,30 +848,30 @@ HashMap概述：HashMap是基于哈希表的Map接口的非同步实现。此实
 
   ![image-20201003220358050](C:\Users\hp\Desktop\java面试题\img\image-20201003220358050.png)
 
-### 7.为什么HashMap线程不安全？
+#### 为什么HashMap线程不安全？
 
 - 同时put碰撞导致数据丢失
 - 同时put 扩容导致数据丢失
 - 在多线程同时扩容的时候会造成链表的互相指向，导致死循环
 - 死循环造成CPU 100% 在JDK7 之前存在
 
-### 8.说一下ConcurrentHashMap 的实现原理
+#### :heartpulse:说一下ConcurrentHashMap 的实现原理
 
 **JDK7**
 
 - 最外层是多个segment，每个segment的底层数据结构是,与HashMap类似，仍然是数组＋链表组成的拉链法
-- 每个segment独立上ReentrantLock 锁，每个segment之间互不影响，提高了并发效率
+- 每个segment独立上**ReentrantLock 锁，**每个segment之间互不影响，提高了并发效率
 - ConcurrenHashMap默认有16个segments，所以最多可支持16个线程并发写（操作分别分布在不同segment上）这个默认值可以在初始化的时候设置为其他值，但是一旦初始化后，是不可以扩容的。
 
 ![image-20201003220629079](C:\Users\hp\Desktop\java面试题\img\image-20201003220629079.png)
 
 **JDK8**
 
-- Java 1.8 采用CAS 加 synchronized 实现
+- Java 1.8 采用**CAS 加 synchronized 实现**
 
 ![image-20201003221240352](C:\Users\hp\Desktop\java面试题\img\image-20201003221240352.png)
 
-### 9. JDK1.7与JDK1.8的不同
+#### JDK1.7 与 JDK1.8的不同
 
 **数据结构不同**
 	•  Java 1.7 中采用cegment 结构，默认只有16个，并发度低
@@ -805,37 +885,392 @@ HashMap概述：HashMap是基于哈希表的Map接口的非同步实现。此实
 Java 1.7 采用的cegement 分段锁 继承自 ReentrantLock 可重入锁
 Java 1.8 采用CAS 加 synchronized 实现
 
-### **10.说一下 HashSet 的实现原理？**
+| 不同                     | JDK 1.7                                                      | JDK 1.8                                                      |
+| ------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 存储结构                 | 数组 + 链表                                                  | 数组 + 链表 + 红黑树                                         |
+| 初始化方式               | 单独函数：`inflateTable()`                                   | 直接集成到了扩容函数`resize()`中                             |
+| hash值计算方式           | 扰动处理 = 9次扰动 = 4次位运算 + 5次异或运算                 | 扰动处理 = 2次扰动 = 1次位运算 + 1次异或运算                 |
+| 存放数据的规则           | 无冲突时，存放数组；冲突时，存放链表                         | 无冲突时，存放数组；冲突 & 链表长度 < 8：存放单链表；冲突 & 链表长度 > 8：树化并存放红黑树 |
+| 插入数据方式             | 头插法（先讲原位置的数据移到后1位，再插入数据到该位置）      | 尾插法（直接插入到链表尾部/红黑树）                          |
+| 扩容后存储位置的计算方式 | 全部按照原来方法进行计算（即hashCode ->> 扰动函数 ->> (h&length-1)） | 按照扩容后的规律计算（即扩容后的位置=原位置 or 原位置 + 旧容量） |
+
+
+
+#### :green_heart:HashMap的put方法的具体流程 
+
+**首先计算key 的hash值。**
+
+- key.hashCode()与 key.hashCode() >>>16 进行异或操作。
+- 高16位补0，一个数和0异或不变，所以hash 函数大概作用就是
+- 高16bit 不变，低16bit 和 高 16bit 做一个异或，**目的是减少碰撞**
+
+**putVal方法执行流程图**
+
+![hashmap](C:\Users\hp\Desktop\java面试题\img\hashmap.png)
+
+```java
+public V put(K key, V value) {
+    return putVal(hash(key), key, value, false, true);
+}
+
+static final int hash(Object key) {
+    int h;
+    return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+}
+
+//实现Map.put和相关方法
+final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
+                   boolean evict) {
+    Node<K,V>[] tab; Node<K,V> p; int n, i;
+    // 步骤①：tab为空则创建 
+    // table未初始化或者长度为0，进行扩容
+    if ((tab = table) == null || (n = tab.length) == 0)
+        n = (tab = resize()).length;
+    // 步骤②：计算index，并对null做处理  
+    // (n - 1) & hash 确定元素存放在哪个桶中，桶为空，新生成结点放入桶中(此时，这个结点是放在数组中)
+    if ((p = tab[i = (n - 1) & hash]) == null)
+        tab[i] = newNode(hash, key, value, null);
+    // 桶中已经存在元素
+    else {
+        Node<K,V> e; K k;
+        // 步骤③：节点key存在，直接覆盖value 
+        // 比较桶中第一个元素(数组中的结点)的hash值相等，key相等
+        if (p.hash == hash &&
+            ((k = p.key) == key || (key != null && key.equals(k))))
+                // 将第一个元素赋值给e，用e来记录
+                e = p;
+        // 步骤④：判断该链为红黑树 
+        // hash值不相等，即key不相等；为红黑树结点
+        // 如果当前元素类型为TreeNode，表示为红黑树，putTreeVal返回待存放的node, e可能为null
+        else if (p instanceof TreeNode)
+            // 放入树中
+            e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+        // 步骤⑤：该链为链表 
+        // 为链表结点
+        else {
+            // 在链表最末插入结点
+            for (int binCount = 0; ; ++binCount) {
+                // 到达链表的尾部
+                
+                //判断该链表尾部指针是不是空的
+                if ((e = p.next) == null) {
+                    // 在尾部插入新结点
+                    p.next = newNode(hash, key, value, null);
+                    //判断链表的长度是否达到转化红黑树的临界值，临界值为8
+                    if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                        //链表结构转树形结构
+                        treeifyBin(tab, hash);
+                    // 跳出循环
+                    break;
+                }
+                // 判断链表中结点的key值与插入的元素的key值是否相等
+                if (e.hash == hash &&
+                    ((k = e.key) == key || (key != null && key.equals(k))))
+                    // 相等，跳出循环
+                    break;
+                // 用于遍历桶中的链表，与前面的e = p.next组合，可以遍历链表
+                p = e;
+            }
+        }
+        //判断当前的key已经存在的情况下，再来一个相同的hash值、key值时，返回新来的value这个值
+        if (e != null) { 
+            // 记录e的value
+            V oldValue = e.value;
+            // onlyIfAbsent为false或者旧值为null
+            if (!onlyIfAbsent || oldValue == null)
+                //用新值替换旧值
+                e.value = value;
+            // 访问后回调
+            afterNodeAccess(e);
+            // 返回旧值
+            return oldValue;
+        }
+    }
+    // 结构性修改
+    ++modCount;
+    // 步骤⑥：超过最大容量就扩容 
+    // 实际大小大于阈值则扩容
+    if (++size > threshold)
+        resize();
+    // 插入后回调
+    afterNodeInsertion(evict);
+    return null;
+}
+```
+
+#### hashMap 的扩容操作是什么？
+
+1. 在 JDK1.8中，resize()方法在hashMap中的键值对大于阈值时初始化，就调用 resize 方法进行扩容
+2. 每次扩容，都是2倍
+3. 扩展后的Node 对象的位置要么在原位置，要么移动到偏移量两倍的位置。
+
+在putVal()中，我们看到在这个函数里面使用到了2次resize()方法，resize()方法表示的在进行第一次初始化时会对其进行扩容，或者当该数组的实际大小大于其临界值时**(第一次为12)**,这个时候在扩容的同时也会伴随的桶上面的元素进行重新分发，这也是JDK1.8版本的一个优化的地方，在1.7中，扩容之后需要重新去计算其Hash值，根据Hash值对其进行分发，但在1.8版本中，则是根据在同一个桶的位置中进行判断(e.hash & oldCap)是否为0，重新进行hash分配后，该元素的位置要么停留在原始位置，要么移动到原始位置+增加的数组大小这个位置上
+
+```java
+final Node<K,V>[] resize() {
+    Node<K,V>[] oldTab = table;//oldTab指向hash桶数组
+    int oldCap = (oldTab == null) ? 0 : oldTab.length;
+    int oldThr = threshold;
+    int newCap, newThr = 0;
+    if (oldCap > 0) {//如果oldCap不为空的话，就是hash桶数组不为空
+        if (oldCap >= MAXIMUM_CAPACITY) {//如果大于最大容量了，就赋值为整数最大的阀值
+            threshold = Integer.MAX_VALUE;
+            return oldTab;//返回
+        }//如果当前hash桶数组的长度在扩容后仍然小于最大容量 并且oldCap大于默认值16
+        else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
+                 oldCap >= DEFAULT_INITIAL_CAPACITY)
+            newThr = oldThr << 1; // double threshold 双倍扩容阀值threshold
+    }
+    // 旧的容量为0，但threshold大于零，代表有参构造有cap传入，threshold已经被初始化成最小2的n次幂
+    // 直接将该值赋给新的容量
+    else if (oldThr > 0) // initial capacity was placed in threshold
+        newCap = oldThr;
+    // 无参构造创建的map，给出默认容量和threshold 16, 16*0.75
+    else {               // zero initial threshold signifies using defaults
+        newCap = DEFAULT_INITIAL_CAPACITY;
+        newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+    }
+    // 新的threshold = 新的cap * 0.75
+    if (newThr == 0) {
+        float ft = (float)newCap * loadFactor;
+        newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
+                  (int)ft : Integer.MAX_VALUE);
+    }
+    threshold = newThr;
+    // 计算出新的数组长度后赋给当前成员变量table
+    @SuppressWarnings({"rawtypes","unchecked"})
+        Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];//新建hash桶数组
+    table = newTab;//将新数组的值复制给旧的hash桶数组
+    // 如果原先的数组没有初始化，那么resize的初始化工作到此结束，否则进入扩容元素重排逻辑，使其均匀的分散
+    if (oldTab != null) {
+        // 遍历新数组的所有桶下标
+        for (int j = 0; j < oldCap; ++j) {
+            Node<K,V> e;
+            if ((e = oldTab[j]) != null) {
+                // 旧数组的桶下标赋给临时变量e，并且解除旧数组中的引用，否则就数组无法被GC回收
+                oldTab[j] = null;
+                // 如果e.next==null，代表桶中就一个元素，不存在链表或者红黑树
+                if (e.next == null)
+                    // 用同样的hash映射算法把该元素加入新的数组
+                    newTab[e.hash & (newCap - 1)] = e;
+                // 如果e是TreeNode并且e.next!=null，那么处理树中元素的重排
+                else if (e instanceof TreeNode)
+                    ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
+                // e是链表的头并且e.next!=null，那么处理链表中元素重排
+                else { // preserve order
+                    // loHead,loTail 代表扩容后不用变换下标，见注1
+                    Node<K,V> loHead = null, loTail = null;
+                    // hiHead,hiTail 代表扩容后变换下标，见注1
+                    Node<K,V> hiHead = null, hiTail = null;
+                    Node<K,V> next;
+                    // 遍历链表
+                    do {             
+                        next = e.next;
+                        if ((e.hash & oldCap) == 0) {
+                            if (loTail == null)
+                                // 初始化head指向链表当前元素e，e不一定是链表的第一个元素，初始化后loHead
+                                // 代表下标保持不变的链表的头元素
+                                loHead = e;
+                            else                                
+                                // loTail.next指向当前e
+                                loTail.next = e;
+                            // loTail指向当前的元素e
+                            // 初始化后，loTail和loHead指向相同的内存，所以当loTail.next指向下一个元素时，
+                            // 底层数组中的元素的next引用也相应发生变化，造成lowHead.next.next.....
+                            // 跟随loTail同步，使得lowHead可以链接到所有属于该链表的元素。
+                            loTail = e;                           
+                        }
+                        else {
+                            if (hiTail == null)
+                                // 初始化head指向链表当前元素e, 初始化后hiHead代表下标更改的链表头元素
+                                hiHead = e;
+                            else
+                                hiTail.next = e;
+                            hiTail = e;
+                        }
+                    } while ((e = next) != null);
+                    // 遍历结束, 将tail指向null，并把链表头放入新数组的相应下标，形成新的映射。
+                    if (loTail != null) {
+                        loTail.next = null;
+                        newTab[j] = loHead;
+                    }
+                    if (hiTail != null) {
+                        hiTail.next = null;
+                        newTab[j + oldCap] = hiHead;
+                    }
+                }
+            }
+        }
+    }
+    return newTab;
+}
+```
+
+#### Hashmap 是怎么解决哈希冲突的？
+
+1. 使用链地址法（使用散列表）来链接拥有相同hash值的数据。
+2. 使用2次扰动函数来降低hash冲突的频率，使得数据分布更均匀
+3. 引入红黑树进一步降低遍历的时间复杂度，使得遍历更快。
+
+#### 为什么hashmap 中的String、Integer 这样的包装类型适合作为key？
+
+String、Integer 等包装类的特性可以保证hash值的不可更改性和准确计算性，能够有效的减少发生碰撞的几率。
+
+- 都是final类型，即不可变性，保证key的不可更改性，不会获取hash值不同的情况
+- 内部已经重写了equals、hashcode等方法，遵循了hashmap内部的规范，不容易出现hash值计算错误的情况
+
+#### HashMap为什么不直接使用hashCode()处理后的哈希值直接作为table的下标？
+
+Hashmap的容量范围是在16（初始化默认值）~ 2^30 通常情况下是取不到最大值的，并且设备上也难以提供这么多的存储空间，从而导致经过hashcode计算出的哈希值可能不在数组大小范围内，进而无法匹配存储位置。
+
+**那怎么解决呢**？
+
+- HashMap 自己实现了自己的hash方法，通过两次扰动使得自己的高位哈希值与低位哈希值进行异或运算，降低哈希碰撞概率也使得数据分布更均匀。
+
+- 在保证数组长度为2的幂次方的时候，使得hash（）运算后的值与(&)运算数组长度-1；来获取数组下标的方式进行存储，
+
+  **这样一来比取余操作更有效率，**
+
+  **二来也是因为只有当数组长度为2的幂次方时，h&（length-1）才等价于h%length**
+
+  **三解决了哈希值与数组大小不匹配的问题**
+
+### **HashMap 和 Hashtable 有什么区别？**
+
+- hashMap去掉了HashTable 的contains方法，但是加上了containsValue（）和containsKey（）方法。
+- hashTable同步的，而HashMap是非同步的，效率上比hashTable要高。
+- hashMap允许空键值，而hashTable不允许。 
+- **初始容量和每次扩容大小不同** 
+
+|          | HashMap                                     | HashTable |
+| -------- | ------------------------------------------- | --------- |
+| 初始容量 | 16(未指定容量)，指定容量将其扩充为2的幂次方 | 11        |
+| 扩容     | 2n                                          | 2n+1      |
+
+### **如何决定使用 HashMap 还是 TreeMap？**
+
+- 对于在Map中插入、删除和定位元素这类操作，HashMap是最好的选择。
+- 然而，假如你需要对一个**有序的key集合进行遍历**，TreeMap是更好的选择。
+
+基于你的collection的大小，也许向HashMap中添加元素会更快，将map换为TreeMap进行有序key的遍历。
+
+### hashCode（）与equals 的相关规定
+
+1. 如果两个对象相等，则hashcode一定也是相同的
+2. 如果两个对象相等，两个equals方法返回true
+3. 如果两个对象的hashcode相等，那么他们的值也不定相等
+4. equals方法被覆盖，hashcode方法也被覆盖
+
+### == 和equals 区别
+
+如果是基本数据类型 == 和equals 含义相同都是判断两个元素是否相等。
+
+**如果是引用类型**
+
+- == 表示的两个对象的地址是否相等
+- equals 表示的是两个对象的内容是否相等
+
+### :heartpulse:Set 
+
+#### **说一下 HashSet 的实现原理？**
 
 - HashSet底层由HashMap实现
 - HashSet的值存放于HashMap的key上
 - HashMap的value统一为PRESENT
 
-### **11.ArrayList 和 LinkedList 的区别是什么？**
+#### HashSet 如何检查重复？HashSet是如何保证数据不可重复的？
 
-- 最明显的区别是 ArrrayList底层的数据结构是数组，支持随机访问，
-- 而 LinkedList 的底层数据结构是双向循环链表，不支持随机访问。
+结合hash值和equals 方法进行比较。
 
-使用下标访问一个元素，ArrayList 的时间复杂度是 O(1)，而 LinkedList 是 O(n)。
+HashSet 的key 是唯一的，调用了Hashmap的 put（）方法。
 
-### **12.如何实现数组和 List 之间的转换？**
+### :heartpulse:ArrayList 
+
+- 非线程安全的列表，底层用数组实现，支持随机访问。
+- **插入删除慢 :**删除元素的时候需要做一次元素复制操作，如果复制的元素过多，那么性能就不是很好。
+- 每次扩容只会增加50%
+
+#### **如何实现数组和 List 之间的转换？**
 
 - List转换成为数组：调用ArrayList的toArray方法。
 - 数组转换成为List：调用Arrays的asList方法。
 
-### **13.ArrayList 和 Vector 的区别是什么？**
+#### 为什么 ArrayList 的 elementData 加上 transient 修饰？
+
+ArrayList 中的数组定义如下：
+
+```java
+private transient Object[] elementData;
+```
+
+再看一下 ArrayList 的定义：
+
+```java
+public class ArrayList<E> extends AbstractList<E>
+     implements List<E>, RandomAccess, Cloneable, java.io.Serializable
+```
+
+可以看到 ArrayList 实现了 Serializable 接口，这意味着 ArrayList 支持序列化。transient 的作用是说不希望 elementData 数组被序列化，重写了 writeObject 实现：
+
+```java
+private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException{
+    *// Write out element count, and any hidden stuff*
+        int expectedModCount = modCount;
+    s.defaultWriteObject();
+    *// Write out array length*
+        s.writeInt(elementData.length);
+    *// Write out all elements in the proper order.*
+        for (int i=0; i<size; i++)
+            s.writeObject(elementData[i]);
+    if (modCount != expectedModCount) {
+        throw new ConcurrentModificationException();
+}
+```
+
+每次序列化时，先调用defaultwriteobject()方法序列化ArrayList中的非transient元素，然后遍历elementData，只序列化已存入的元素，这样既加快了序列化的速度，又减小了序列化之后的文件大小。
+
+### :heartpulse:LinkedList
+
+- 非线程安全的列表，底层使用双向列表实现。不支持随机访问。
+- 插入删除快，
+
+### ArrayList和LinkedList的区别是什么？
+
+**数据结构** ArrayList是动态数组实现的，LinkedList 是基于双向链表实现的
+
+**随机访问效率** ArrayList 比LinkedList的随机访问效率要高。
+
+**增加删除效率** 在非首尾的增加和删除效率，LinkedList的效率要比ArrayList 高，因为ArrayList的增删操作要影响数组内的其他数据的下标
+
+**内存空间占用** LinkedList 要比ArrayList 更占内存。因为LinkedList 除了存储数据，还需要存储两个引用，一个指向前一个元素，一个指向后一个元素。
+
+**线程安全** 他们都是线程不安全的。
+
+**总的来说**：删除和更新使用LinkedList 更快一些，查找操作使用ArrayList更快。
+
+### ArrayList 和 Vector 的区别是什么？
+
+**他们都实现了List 接口，都是有序集合。**
 
 - Vector是同步的，而ArrayList不是。然而，**如果你寻求在迭代的时候对列表进行改变**，你应该使用CopyOnWriteArrayList。 
 - ArrayList比Vector快，它因为有同步，不会过载。 
 - ArrayList更加通用，因为我们可以使用Collections工具类轻易地获取同步列表和只读列表。
 
-### **14.Array 和 ArrayList 有何区别？**
+### Array 和 ArrayList 有何区别？
 
 - Array可以容纳**基本类型和对象**，而ArrayList只能容纳对象。 
 - Array是指定大小的，而ArrayList大小是固定的。 
 - Array没有提供ArrayList那么多功能，比如addAll、removeAll和iterator等。
 
-### **15.在 Queue 中 poll()和 remove()有什么区别？**
+### :apple:Queue
+
+#### BlockingQueue是什么？
+
+当添加一个元素，如果队列满则阻塞住，当移除一个元素，如果队列为空，则进行阻塞。
+
+主要用来实现生产者和消费者
+
+#### 在 Queue 中 poll()和 remove()有什么区别？
 
 poll() 和 remove() 都是从队列中取出一个元素，
 
@@ -847,6 +1282,8 @@ poll() 和 remove() 都是从队列中取出一个元素，
 
 ![image-20201003222047381](C:\Users\hp\Desktop\java面试题\img\image-20201003222047381.png)
 
+
+
 ### **16.哪些集合类是线程安全的？**
 
 - vector：就比arraylist多了个同步化机制（线程安全），因为效率较低，现在已经不太建议使用。在web应用中，特别是前台页面，往往效率（页面响应速度）是优先考虑的。
@@ -854,11 +1291,11 @@ poll() 和 remove() 都是从队列中取出一个元素，
 - hashtable：就比hashmap多了个线程安全。
 - enumeration：枚举，相当于迭代器。
 
-### **17迭代器 Iterator 是什么？**
+### 迭代器 Iterator 是什么？
 
 迭代器是一种设计模式，它是一个对象，它可以遍历并选择序列中的对象，而开发人员不需要了解该序列的底层结构。迭代器通常被称为“轻量级”对象，因为创建它的代价小。
 
-###  **18.Iterator 怎么使用？有什么特点？**
+####  **Iterator 怎么使用？有什么特点？**
 
 **Java中的Iterator功能比较简单，并且只能单向移动：**　　
 
@@ -872,19 +1309,19 @@ poll() 和 remove() 都是从队列中取出一个元素，
 
 Iterator是Java迭代器最简单的实现，为List设计的ListIterator具有更多的功能，它可以从两个方向遍历List，也可以从List中插入和删除元素。
 
-### **19.Iterator 和 ListIterator 有什么区别？**
+#### list遍历方式有哪些？
+
+**for** 循环遍历
+
+**迭代器遍历**，iterator。iterator是面向对象的一个设计模式，目的是屏蔽不同集合的特点，统一遍历集合的接口。
+
+**foreach 循环遍历**
+
+#### **Iterator 和 ListIterator 有什么区别？**
 
 - Iterator可用来遍历Set和List集合，但是ListIterator只能用来遍历List。 
 - Iterator对集合只能是前向遍历，ListIterator既可以前向也可以后向。 
 - ListIterator实现了Iterator接口，并包含其他的功能，比如：增加元素，替换元素，获取前一个和后一个元素的索引，等等。
-
-### 20.Set用什么方法来区分重复与否呢? 
-
-- Set里的元素是不能重复的，那么用iterator()方法来区分重复与否。
-
-- equals()是判读两个Set是否相等。 
-
-- equals()和==方法决定引用值是否指向同一对象equals()在类中被覆盖，为的是当两个分离的对象的内容和类型相配的话，返回真值。 
 
 
 ## ⭐java基础⭐
@@ -2506,6 +2943,55 @@ Spring Boot提供了两种常用的配置文件：
 
 - properties文件，
 - yml文件   yml文件更年轻，也有很多的坑，可谓成也萧何败萧何，yml通过空格来确定层级关系，使配置文件结构跟清晰，但也会因为微不足道的空格而破坏了层级关系。
+
+### Spring Boot 的核心注解是哪个？它主要由哪几个注解组成的？
+
+启动类上面的注解是@SpringBootApplication，它也是 Spring Boot 的核心注解，主要组合包含了以下 3 个注解：
+
+@SpringBootConfiguration：组合了 @Configuration 注解，实现配置文件的功能。
+
+@EnableAutoConfiguration：打开自动配置的功能，也可以关闭某个自动配置的选项，如关闭数据源自动配置功能： @SpringBootApplication(exclude = { DataSourceAutoConfiguration.class })。
+
+@ComponentScan：Spring组件扫描。
+
+### 自动配置原理是什么？
+
+- 注解 @EnableAutoConfiguration, @Configuration, @ConditionalOnClass 就是自动配置的核心，
+
+- @EnableAutoConfiguration 给容器导入META-INF/spring.factories 里定义的自动配置类。
+
+- 筛选有效的自动配置类。
+
+- 每一个自动配置类结合对应的 xxxProperties.java 读取配置文件进行自动配置功能
+
+### Spring Boot 配置加载顺序？
+
+在 Spring Boot 里面，可以使用以下几种方式来加载配置。
+
+1）properties文件；
+
+2）YAML文件；
+
+3）系统环境变量；
+
+4）命令行参数；
+
+### 什么是 YAML？
+
+YAML 是一种人类可读的数据序列化语言。它通常用于配置文件。与属性文件相比，如果我们想要在配置文件中添加复杂的属性，YAML 文件就更加结构化，而且更少混淆。可以看出 YAML 具有分层配置数据。
+
+### Spring Boot 是否可以使用 XML 配置 ?
+
+Spring Boot 推荐使用 Java 配置而非 XML 配置，但是 Spring Boot 中也可以使用 XML 配置，通过 @ImportResource 注解可以引入一个 XML 配置。
+
+### spring boot 核心配置文件是什么？
+
+spring boot 核心的两个配置文件：
+
+- bootstrap (. yml 或者 . properties)：boostrap 由父 ApplicationContext 加载的，比 applicaton 优先加载，配置在应用程序上下文的引导阶段生效。一般来说我们在 Spring Cloud Config 或者 Nacos 中会用到它。且 boostrap 里面的属性不能被覆盖；
+- application (. yml 或者 . properties)： 由ApplicatonContext 加载，用于 spring boot 项目的自动化配置。
+
+
 
 ### 3.Spring boot 中的监视器是什么
 
@@ -6759,19 +7245,91 @@ slave1 作为 master 的从节点。slave2、slave3、slave4作为slave1的从�
 
 Redis是一个开源的使用ANSI C语言编写、支持网络、可基于内存亦可持久化的日志型、Key-Value数据库，并提供多种语言的API。
 
-Redis 使用场景：
-
-- 数据高并发的读写
-- 海量数据的读写
-- 对扩展性要求高的数据
-
-### **2.redis 有哪些功能？**
+**redis 有哪些功能？**
 
 - 数据缓存功能
 - 分布式锁的功能
 - 支持数据持久化
 - 支持事务
 - 支持消息队列
+
+**Redis 使用场景：**
+
+- 数据高并发的读写
+- 海量数据的读写
+- 对扩展性要求高的数据
+
+**（1）、会话缓存（Session Cache）**
+
+最常用的一种使用Redis的情景是会话缓存（session cache）。用Redis缓存会话比其他存储（如Memcached）的优势在于：Redis提供持久化。当维护一个不是严格要求一致性的缓存时，如果用户的购物车信息全部丢失，大部分人都会不高兴的，现在，他们还会这样吗？ 幸运的是，随着 Redis 这些年的改进，很容易找到怎么恰当的使用Redis来缓存会话的文档。甚至广为人知的商业平台Magento也提供Redis的插件。
+
+**（2）、全页缓存（FPC）**
+
+除基本的会话token之外，Redis还提供很简便的FPC平台。回到一致性问题，即使重启了Redis实例，因为有磁盘的持久化，用户也不会看到页面加载速度的下降，这是一个极大改进，类似PHP本地FPC。 再次以Magento为例，Magento提供一个插件来使用Redis作为全页缓存后端。 此外，对WordPress的用户来说，Pantheon有一个非常好的插件 wp-redis，这个插件能帮助你以最快速度加载你曾浏览过的页面。
+
+**（3）、队列**
+
+Reids在内存存储引擎领域的一大优点是提供 list 和 set 操作，这使得Redis能作为一个很好的消息队列平台来使用。Redis作为队列使用的操作，就类似于本地程序语言（如Python）对 list 的 push/pop 操作。 如果你快速的在Google中搜索“Redis queues”，你马上就能找到大量的开源项目，这些项目的目的就是利用Redis创建非常好的后端工具，以满足各种队列需求。例如，Celery有一个后台就是使用Redis作为broker，你可以从这里去查看。
+
+**（4），排行榜/计数器**
+
+Redis在内存中对数字进行递增或递减的操作实现的非常好。集合（Set）和有序集合（Sorted Set）也使得我们在执行这些操作的时候变的非常简单，Redis只是正好提供了这两种数据结构。所以，我们要从排序集合中获取到排名最靠前的10个用户–我们称之为“user_scores”，我们只需要像下面一样执行即可： 当然，这是假定你是根据你用户的分数做递增的排序。如果你想返回用户及用户的分数，你需要这样执行： ZRANGE user_scores 0 10 WITHSCORES Agora Games就是一个很好的例子，用Ruby实现的，它的排行榜就是使用Redis来存储数据的，你可以在这里看到。
+
+**（5）、发布/订阅**
+
+最后（但肯定不是最不重要的）是Redis的发布/订阅功能。发布/订阅的使用场景确实非常多。我已看见人们在社交网络连接中使用，还可作为基于发布/订阅的脚本触发器，甚至用Redis的发布/订阅功能来建立聊天系统！
+
+### redis 支持的数据类型有哪些？
+
+**string**
+
+- 格式: set key value
+- string类型是二进制安全的。意思是redis的string可以包含任何数据。比如jpg图片或者序列化的对象 。
+- string类型是Redis最基本的数据类型，一个键最大能存储512MB。
+
+**list**
+
+- redis 列表是简单的字符串列表，按照插入顺序排序。你可以添加一个元素到列表的头部（左边）或者尾部（右边）
+
+- 格式: lpush name value
+
+  在 key 对应 list 的头部添加字符串元素
+
+- 格式: rpush name value
+
+  在 key 对应 list 的尾部添加字符串元素
+
+- 格式: lrem name index
+
+  key 对应 list 中删除 count 个和 value 相同的元素
+
+- 格式: llen name 
+
+  返回 key 对应 list 的长度
+
+**hash**
+
+- 格式: hmset name key1 value1 key2 value2
+- Redis hash 是一个键值(key=>value)对集合。
+- Redis hash是一个string类型的field和value的映射表，hash特别适合用于存储对象。
+
+**set** 
+
+- 格式: sadd name value
+- Redis的Set是string类型的无序集合。
+- 集合是通过哈希表实现的，所以添加，删除，查找的复杂度都是O(1)。
+
+**zset**
+
+- (sorted set：有序集合) 不允许重复
+
+- 格式: zadd name score value
+- 不同的是每个元素都会关联一个double类型的分数。redis正是通过分数来为集合中的成员进行从小到大的排序。
+- zset的成员是唯一的,但分数(score)却可以重复。
+
+**加分项：**另外redis还对这几种数据结构做了扩展，如GEO对位置计算，hyperLogLog做统计，bitmaps：redis底层存储value值都是存储的二进制数据，redis提供bitmaps（位图）可以直接访问或修改底层存储的二进制数据
+
+![image-20201208120850165](C:\Users\hp\Desktop\java面试题\img\image-20201208120850165.png)
 
 ### **3.redis 和 memecache 有什么区别？**
 
@@ -6787,14 +7345,14 @@ Redis 使用场景：
 
 而且单线程并不代表就慢 nginx 和 nodejs 也都是高性能单线程的代表。
 
-### **5.什么是缓存穿透？怎么解决？**
+### **:heartpulse:什么是缓存穿透？怎么解决？**
 
 **缓存穿透：** 表示恶意用户频繁的的请求缓存不存在的数据，以致这些请求短时间内落在数据库上，导致数据库性能急剧下降，最终影响服务整体的性能。
 
 **解决方案：**
 
 1. 布隆过滤 :将所有可能存在的数据存到一个bitMap 中，不存在的数据就会进行拦截
-2. 对查询结果为空的情况也进行缓存(不管数据是否存在，还是系统故障)，缓存时间设置短一点，不超过5分钟。
+2. **对查询结果为空的情况也进行缓存**(不管数据是否存在，还是系统故障)，缓存时间设置短一点，不超过5分钟。
 
 **空对象 :** 内存空间占用大（设置较短的过期时间）、数据不一致（利用消息系统清除缓存）
 
@@ -6802,40 +7360,151 @@ Redis 使用场景：
 
 ![image-20201114104609104](C:\Users\hp\Desktop\java面试题\img\image-20201114104609104.png)
 
-### 6.什么是缓存雪崩？如何解决？
+### 缓存降级
+
+缓存降级就是当缓存失效或者服务挂掉时，我们也不去访问数据库。直接访问内存部分数据缓存或者返回默认数据。
+
+### :heartpulse:什么是缓存雪崩？如何解决？
 
 **缓存雪崩**：在短时间有大量缓存失效，如果这段时间有大量的请求发生同样会导致数据库发生宕机。
 
 **解决办法：**
 
-1. 做二级缓存，A1为原始缓存，A2为拷贝缓存，A1失效时，可以访问A2，A1缓存失效时间设置为短期，A2设置为长期
+1. **做二级缓存**，A1为原始缓存，A2为拷贝缓存，A1失效时，可以访问A2，A1缓存失效时间设置为短期，A2设置为长期
 2. 计算数据缓存节点的时候采用一致性 hash 算法，这样在节点数量发生改变时不会存在大量的缓存数据需要迁移的情况发生。
-3. 不同的key，设置不同的过期时间，让缓存失效的时间点尽量均匀。
+3. **设置不同的过期时间**，让缓存失效的时间点尽量均匀。
 4. 如果缓存数据库是分布式部署，将热点数据均匀分布在不同缓存数据库中。
 5. 在缓存失效后，通过加锁或者队列来控制读数据库写缓存的线程数量。比如对某个key只允许一个线程查询数据和写缓存，其他线程等待。
+6. **数据预热** ，在系统上线前，将相关直接加载到缓存系统上
+7. **定时更新二级缓存** 对时效性不高的缓存，容器启动初始化加载，采用定时任务更新或移除缓存
 
 - 事前 ：redis 高可用 主从+哨兵 redis cluster 避免全盘崩溃
 - 事中：hystrix 限流降级，避免MySQL被打死
 - 事后：redis 持久化，快速恢复缓存数据
 
-### 热点Key重建优化问题
+### 什么是缓存预热？
 
-当前Key 是一个热点 Key，并发量非常大，重建缓存不能在短时间完成，可能是一个复杂的计算（复杂的SQL、多次IO、多个依赖），在缓存失效的瞬间，有大量的线程重建缓存导致系统负载增大，导致系统崩溃
+缓存预热指的是系统上线后，将相关的数据加载到缓存中。避免刚上线时大量的请求打过来，导致系统宕机。
+
+### :heartpulse:什么是缓存击穿？(热点key重建优化问题)
+
+缓存击穿指的**是一个key 非常热点**，在不停的扛着高并发，大并发集中在这个点进行访问，当这个key 在失效的瞬间，持续的大并发导致缓存击穿，直接去请求数据库，就像一个屏障上开了一个洞。
 
 **解决办法**
 
-1. 互斥锁
+1. **互斥锁**
 
-   此方法只允许一个线程重建缓存，其他线程等待重建缓存的线程执行
-   完，重新从缓存获取数据即可
-
-2. 永远不过期
+   此方法只允许一个线程重建缓存，其他线程等待重建缓存的线程执行完，重新从缓存获取数据即可
+   
+2. **永远不过期**
    **“永远不过期”包含两层意思：**
    @ 从缓存层面来看，确实没有设置过期时间，所以不会出现热点key过期后产生的问题，   也就是“物理”不过期。
    @ 从功能层面来看，为每个value设置一个逻辑过期时间，当发现超过逻
    辑过期时间后，会使用单独的线程去构建缓存。
 
 ![image-20201114103948026](C:\Users\hp\Desktop\java面试题\img\image-20201114103948026.png)
+
+3. **缓存屏障**
+
+该方法类似于方法一：使用countDownLatch和atomicInteger.compareAndSet()方法实现轻量级锁
+
+```java
+class MyCache{
+
+    private ConcurrentHashMap<String, String> map;
+
+    private CountDownLatch countDownLatch;
+
+    private AtomicInteger atomicInteger;
+
+    public MyCache(ConcurrentHashMap<String, String> map, CountDownLatch countDownLatch,
+                   AtomicInteger atomicInteger) {
+        this.map = map;
+        this.countDownLatch = countDownLatch;
+        this.atomicInteger = atomicInteger;
+    }
+
+    public String get(String key){
+
+        String value = map.get(key);
+        if (value != null){
+            System.out.println(Thread.currentThread().getName()+"\t 线程获取value值 value="+value);
+            return value;
+        }
+        // 如果没获取到值
+        // 首先尝试获取token，然后去查询db，初始化化缓存；
+        // 如果没有获取到token，超时等待
+        if (atomicInteger.compareAndSet(0,1)){
+            System.out.println(Thread.currentThread().getName()+"\t 线程获取token");
+            return null;
+        }
+
+        // 其他线程超时等待
+        try {
+            System.out.println(Thread.currentThread().getName()+"\t 线程没有获取token，等待中。。。");
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        // 初始化缓存成功，等待线程被唤醒
+        // 等待线程等待超时，自动唤醒
+        System.out.println(Thread.currentThread().getName()+"\t 线程被唤醒，获取value ="+map.get("key"));
+        return map.get(key);
+    }
+
+    public void put(String key, String value){
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        map.put(key, value);
+
+        // 更新状态
+        atomicInteger.compareAndSet(1, 2);
+
+        // 通知其他线程
+        countDownLatch.countDown();
+        System.out.println();
+        System.out.println(Thread.currentThread().getName()+"\t 线程初始化缓存成功！value ="+map.get("key"));
+    }
+
+}
+
+class MyThread implements Runnable{
+
+    private MyCache myCache;
+
+    public MyThread(MyCache myCache) {
+        this.myCache = myCache;
+    }
+
+    @Override
+    public void run() {
+        String value = myCache.get("key");
+        if (value == null){
+            myCache.put("key","value");
+        }
+
+    }
+}
+
+public class CountDownLatchDemo {
+    public static void main(String[] args) {
+
+        MyCache myCache = new MyCache(new ConcurrentHashMap<>(), new CountDownLatch(1), new AtomicInteger(0));
+
+        MyThread myThread = new MyThread(myCache);
+
+        ExecutorService executorService = Executors.newFixedThreadPool(5);
+        for (int i = 0; i < 5; i++) {
+            executorService.execute(myThread);
+        }
+    }
+}
+```
 
 ### 缓存无底洞问题
 
@@ -6888,55 +7557,31 @@ max_slow(node 网络时间 )+n 次命令时间
 
 1. 在系统上线前提前给 redis 嵌入热点数据，
 
-### **7.redis 支持的数据类型有哪些？**
+### :heartpulse:redis事务
 
-**string**
+#### 什么是事务
 
-- 格式: set key value
-- string类型是二进制安全的。意思是redis的string可以包含任何数据。比如jpg图片或者序列化的对象 。
-- string类型是Redis最基本的数据类型，一个键最大能存储512MB。
+redis 事务是一组命令的集合，是redis的最小执行单位，一个事务要么都执行，要不都不执行。主要有以下三个重要特征：
 
-**list**
+- 批量操作在发送EXEC 命令前被放入队列缓存
+- 收到EXEC 命令后进入事务执行，事务中任意命令执行失败，其余的命令依然执行
+- 在事务执行过程中，其他客户端提交的命令请求不会插入到事务执行序列中
 
-- redis 列表是简单的字符串列表，按照插入顺序排序。你可以添加一个元素到列表的头部（左边）或者尾部（右边）
+**redis 事务的原理是**先将属于一个事务的命令发送给redis，然后依次执行这些命令
 
-- 格式: lpush name value
+#### 为什么Redis 事务不具备原子性？
 
-  在 key 对应 list 的头部添加字符串元素
+单个 Redis 命令的执行是原子性的，但是Redis 不支持回滚操作。事务可以理解为一个打包的批量执行脚本，但批量指令并发原子性操作，一旦中间某条指令失败，不会导致之前的指令回滚，而是继续执行后续指令。
 
-- 格式: rpush name value
+#### Redis 事务相关命令有哪些？
 
-  在 key 对应 list 的尾部添加字符串元素
+- **DISCARD** 取消事务，放弃执行事务块内的所有命令 :yellow_heart: **discard（抛弃）**
+- **EXEC** 执行所有事务块内的命令 :yellow_heart: **exex(执行)**
+- **MULTI** 标记一个事务的开始 **:yellow_heart:multi(多)**
+- **WATCH** 监视一个（或多个）key，如果事务执行之前这个（或这些）key被其他命令所改动，那么事务将被打断
+- **UNWATCH** 取消WATCH 命令对所有key的监视
 
-- 格式: lrem name index
 
-  key 对应 list 中删除 count 个和 value 相同的元素
-
-- 格式: llen name 
-
-  返回 key 对应 list 的长度
-
-**hash**
-
-- 格式: hmset name key1 value1 key2 value2
-- Redis hash 是一个键值(key=>value)对集合。
-- Redis hash是一个string类型的field和value的映射表，hash特别适合用于存储对象。
-
-**set** 
-
-- 格式: sadd name value
-- Redis的Set是string类型的无序集合。
-- 集合是通过哈希表实现的，所以添加，删除，查找的复杂度都是O(1)。
-
-**zset**
-
-- (sorted set：有序集合) 不允许重复
-
-- 格式: zadd name score value
-- 不同的是每个元素都会关联一个double类型的分数。redis正是通过分数来为集合中的成员进行从小到大的排序。
-- zset的成员是唯一的,但分数(score)却可以重复。
-
-**加分项：**另外redis还对这几种数据结构做了扩展，如GEO对位置计算，hyperLogLog做统计，bitmaps：redis底层存储value值都是存储的二进制数据，redis提供bitmaps（位图）可以直接访问或修改底层存储的二进制数据
 
 ### **8.怎么保证缓存和数据库数据的一致性？**
 
@@ -6977,14 +7622,14 @@ max_slow(node 网络时间 )+n 次命令时间
 - 读:redis ->没有，读 MySQL-> 把MySQL数据写回redis；有直接从redis中读取
 - 写：异步 先写入redis 缓存，直接返回；定期将数据保存到MySQL中，可以做到多次更新，一次保存
 
-### **9.redis 持久化有几种方式？**
+### :heartpulse:redis 持久化
 
-Redis 的持久化有两种方式，或者说有两种策略：
+#### Redis 的持久化有哪两种方式？
 
 - RDB（Redis Database）：指定的时间间隔能对你的数据进行快照存储。定时持久机制，宕机可能会丢失最后一次持久化之后的数据
 - AOF（Append Only File）：每一个收到的写命令都通过write函数追加到文件中。
 
-#### AOF（Append-only file）持久化方式
+#### AOF（Append-only file）
 
 以独立日志的方式记录每次写命令，重启时再重新执行 AOF 文件的中的命令达到数据恢复的目的
 
@@ -7003,7 +7648,7 @@ Redis 的持久化有两种方式，或者说有两种策略：
 1. AOF 文件比 RDB 文件大，且恢复速度慢
 2. 数据集大时，比RDB 启动效率低
 
-#### RDB（redis DataBase）持久化方式
+#### RDB（redis DataBase）
 
 指用数据集快照的方式（半持久话模式），记录 redis 数据库所有的键值对，在某个时间点将数据写入到一个临时文件，待持久化结束后，用这个临时文件替换上次持久化好的文件。
 
@@ -7016,9 +7661,9 @@ Redis 的持久化有两种方式，或者说有两种策略：
 
 **缺点**
 
-数据安全性低：RDB 会每隔一段时间进行一次持久化，如果持久化之间 redis 发生故障，会发生数据丢失。
+**数据安全性低**：RDB 会每隔一段时间进行一次持久化，如果持久化之间 redis 发生故障，会发生数据丢失。
 
-### **10.redis 分布式锁？**
+### **:heartpulse:redis 分布式锁？**
 
 #### **1. 分布式锁的基本要素**
 
@@ -7104,37 +7749,36 @@ Redis 的持久化有两种方式，或者说有两种策略：
 
 2、如果数据呈现平等分布，也就是所有的数据访问频率都相同，则使用allkeys-random
 
+### redis缓存失效策略？
+
+**（一）定时删除:**
+
+- 每个设置过期时间的key 都需要创建一个定时器，到过期时间就会立即删除。
+- 该策略立即删除过期的数据，对内存友好，但是会占用大量CPU 时间去处理过期的数据，从而影响缓存的响应时间和吞吐量
+
+**（二）惰性删除:**
+
+- 只有当访问一个key 时，才会判断key 是否过期，过期则清除。
+- 该策略可以最大化节省CPU资源，却对内存非常不友好。极端情况下可能出现大量过期的key没有被再次访问，可是又不会清除，占用大量内存。
+
+**（三）定期过期策略**
+
+- 每隔一定的时间，会扫描一定数量的数据库的 expires 字典中一定数量的key，并清除其中已经过期的key。
+- 该策略是前两者的一个折中的方案。
+- 通过调整定时扫描的时间间隔和每次扫描的限定耗时，可以在不同情况下使得CPU和内存资源达到最优的平衡效果。
+
 ### **14. redis 常见的性能问题有哪些？该如何解决？**
 
 - 主服务器写内存快照，会阻塞主线程的工作，当快照比较大时对性能影响是非常大的，会间断性暂停服务，所以主服务器最好不要写内存快照。
 - Redis 主从复制的性能问题，为了主从复制的速度和连接的稳定性，主从库最好在同一个局域网内。
 
-### 15.redis支持事务吗
 
-redis可以说是半支持事务（假事务），提供了一些在一定程度上支持线程安全和事务的命令。例如：multi/exec watch inc等。
-
-但是redis的事务并不支持回滚，即可以两个命令可以同时提交执行，但是如果有失败，成功的也不会回滚
-
-### 16.redisCluster
-
-Rediscluster集群模式
-基本回答：Rediscluster是一个高可用集群，它基于分片（对key进行crc16，然后对16384取余）的原理，可以把他理解为是由多组哨兵集群组成，但是它不依赖哨兵
-
-### 17.哨兵
-
-主要作用就是启动哨兵节点对主节点进行监控，如果半数以上ping主节点不同，则认为主节点宕掉，他们会选举出一个从节点作为主机点进行故障转移。同时将这个变化通知给客户端。
 
 ### 18.**一个字符串类型的值能存储最大容量是多少？**
 
 512M
 
-### 19.redis过期键的删除策略？
 
-(1)、定时删除:在设置键的过期时间的同时，创建一个定时器(timer). 让定时器在键的过期时间来临时，立即执行对键的删除操作。
-
-(2)、惰性删除:放任键过期不管，但是每次从键空间中获取键时，都检查取得的键是否过期，如果过期的话，就删除该键;如果没有过期，就返回该键。
-
-(3)、定期删除:每隔一段时间程序就对数据库进行一次检查，删除里面的过期键。至于要删除多少过期键，以及要检查多少个数据库，则由算法决定。
 
 ### 20.redis 的同步机制了解么
 
@@ -7144,7 +7788,9 @@ redis 可以使用主从复制、从从复制，第一次同步时，主节点�
 
 可以将多次IO 往返的时间缩减为一次	，前提是pipeline 执行指令之间没有因果相关性。使用redis-benchmark 进行压测时可以发现影响redis的QPS 峰值的一个重要因素是 pipeline批次执行指令的数目。
 
-### 22. redis集群
+### :heartpulse: redis集群 
+
+#### redis 集群
 
 1.Redis集群是一个由多个节点组成的分布式服务集群，它具有复制、高可用和分片特性
 
@@ -7162,27 +7808,67 @@ redis 可以使用主从复制、从从复制，第一次同步时，主节点�
 
 如果只需要一部分特性（比如只需要分片，但不需要复制和高可用等），那么单独选用twemproxy、Redis的复制和Redis Sentinel中的一个或多个
 
-### 23.Redis集群方案什么情况下会导致整个集群不可用？
+#### 讲讲主从复制
+
+1. 从节点执行 slaveof 命令。与master 节点建立连接，此时还没有建立连接
+2. 从节点内部的定时任务发现有主节点的信息，开始使用 socket 连接主节点
+3. 连接建立成功后，从节点发送 ping 命令，希望得到pong 命令响应，否则进行重试
+4. 如果此时主节点设置了权限，那么就进行权限验证，如果验证失败复制终止
+5. 权限验证通过后，进行数据同步，这个步骤是最耗时的，主节点将所有数据全部发送给从节点
+6. 当主节点把当前数据同步给从节点后，便完成了复制的建立流程。接下来主节点会把持续的写命令发送给从节点，保证主从数据一致性。
+
+#### redis 主从架构
+
+redis 主从架构可以进行主从复制（冗余备份）、读写分离
+
+**主从复制**
+
+- 使用这种架构可以保证系统的高可用，当master 出现故障发生宕机时，可以使用 从库替代master 进行故障恢复。
+
+**读写分离**
+
+- 主从架构中，可以关闭主服务器的持久化功能，只让从服务器进行持久化，这样可以提高主服务器的处理性能。从服务器设置为只读模式，这样可以避免从服务器的数据被修改。
+
+#### redisCluster
+
+Rediscluster集群模式
+基本回答：Rediscluster是一个高可用集群，它基于分片（对key进行crc16，然后对16384取余）的原理，可以把他理解为是由多组哨兵集群组成，但是它不依赖哨兵
+
+#### 哨兵
+
+主要作用就是启动哨兵节点对主节点进行监控，如果半数以上ping主节点不同，则认为主节点宕掉，他们会选举出一个从节点作为主机点进行故障转移。同时将这个变化通知给客户端。
+
+#### Redis集群方案什么情况下会导致整个集群不可用？
 
 答：有A，B，C三个节点的集群,在没有复制模型的情况下,如果节点B失败了，那么整个集群就会以为缺少5501-11000这个范围的槽而不可用
 
-### 24.说说redis 哈希槽的概念
+#### 说说redis 哈希槽的概念
 
 redis 没有使用一致性哈希，而是引入了哈希槽的概念，redis集群中有16384个哈希槽所谓哈希槽就是每个key 通过crc16校验后对 16384 取模来决定放置哪个槽，集群的每个节点负责一部分的 hash 槽
 
-### 25.Redis集群的主从复制模型是怎样的？
+#### Redis集群的主从复制模型是怎样的？
 
 答：为了使在部分节点失败或者大部分节点无法通信的情况下集群仍然可用，所以集群使用了主从复制模型,每个节点都会有N-1个复制品.
 
-### 26.Redis集群会有写操作丢失吗？为什么？
+#### Redis集群会有写操作丢失吗？为什么？
 
 答：Redis并不能保证数据的强一致性，这意味这在实际中集群在特定的条件下可能会丢失写操作。
 
-### 27.Redis集群之间是如何复制的？
+#### Redis集群之间是如何复制的？
 
 答：异步复制
 
-### 28.Redis集群默认选择0数据库，不支持选择。
+#### Redis集群默认选择0数据库，不支持选择。
+
+### :green_apple:什么是慢查询？怎么配置？
+
+执行命令操作时，如果某条指令超过了设置的阈值，就说明该条命令为慢指令。
+
+**配置参数**
+
+showlog-log-slower-than：超过这个阈值就是慢查询，**单位为微秒，默认为10000**
+
+slowlog-max-len 慢查询的日志列表最大长度，当慢查询日志列表处于最大长度的时候，最早插入的一个命令将从列表中移除。
 
 ### 29.Redis回收进程如何工作的？
 
@@ -7199,28 +7885,6 @@ Redis检查内存使用情况，如果大于maxmemory的限制, 则根据设定�
 ### 32.MySQL里有2000w数据，redis中只存20w的数据，如何保证redis中的数据都是热点数据？
 
 使用allkeys-lru 淘汰机制，淘汰掉最少使用的数据
-
-### 33.Redis最适合的场景？
-
-（1）、会话缓存（Session Cache）
-
-最常用的一种使用Redis的情景是会话缓存（session cache）。用Redis缓存会话比其他存储（如Memcached）的优势在于：Redis提供持久化。当维护一个不是严格要求一致性的缓存时，如果用户的购物车信息全部丢失，大部分人都会不高兴的，现在，他们还会这样吗？ 幸运的是，随着 Redis 这些年的改进，很容易找到怎么恰当的使用Redis来缓存会话的文档。甚至广为人知的商业平台Magento也提供Redis的插件。
-
-（2）、全页缓存（FPC）
-
-除基本的会话token之外，Redis还提供很简便的FPC平台。回到一致性问题，即使重启了Redis实例，因为有磁盘的持久化，用户也不会看到页面加载速度的下降，这是一个极大改进，类似PHP本地FPC。 再次以Magento为例，Magento提供一个插件来使用Redis作为全页缓存后端。 此外，对WordPress的用户来说，Pantheon有一个非常好的插件 wp-redis，这个插件能帮助你以最快速度加载你曾浏览过的页面。
-
-（3）、队列
-
-Reids在内存存储引擎领域的一大优点是提供 list 和 set 操作，这使得Redis能作为一个很好的消息队列平台来使用。Redis作为队列使用的操作，就类似于本地程序语言（如Python）对 list 的 push/pop 操作。 如果你快速的在Google中搜索“Redis queues”，你马上就能找到大量的开源项目，这些项目的目的就是利用Redis创建非常好的后端工具，以满足各种队列需求。例如，Celery有一个后台就是使用Redis作为broker，你可以从这里去查看。
-
-（4），排行榜/计数器
-
-Redis在内存中对数字进行递增或递减的操作实现的非常好。集合（Set）和有序集合（Sorted Set）也使得我们在执行这些操作的时候变的非常简单，Redis只是正好提供了这两种数据结构。所以，我们要从排序集合中获取到排名最靠前的10个用户–我们称之为“user_scores”，我们只需要像下面一样执行即可： 当然，这是假定你是根据你用户的分数做递增的排序。如果你想返回用户及用户的分数，你需要这样执行： ZRANGE user_scores 0 10 WITHSCORES Agora Games就是一个很好的例子，用Ruby实现的，它的排行榜就是使用Redis来存储数据的，你可以在这里看到。
-
-（5）、发布/订阅
-
-最后（但肯定不是最不重要的）是Redis的发布/订阅功能。发布/订阅的使用场景确实非常多。我已看见人们在社交网络连接中使用，还可作为基于发布/订阅的脚本触发器，甚至用Redis的发布/订阅功能来建立聊天系统！
 
 ### 34.假如Redis里面有1亿个key，其中有10w个key是以某个固定的已知的前缀开头的，如果将它们全部找出来？
 
