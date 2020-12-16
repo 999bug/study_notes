@@ -221,11 +221,315 @@ Apache
 
 ![image-20201108093424581](C:\Users\hp\Desktop\java面试题\img\image-20201108093424581.png)
 
-#### 7. 跨域问题Jsonp
+#### 7.跨域问题
 
-原理简单 使用没有没有跨域限制的 script 标签加载预设的 callback 将内容传递给 js。
+跨域：浏览器对于javascript的同源策略的限制 。
 
-一般来说我们通过一个参数来告诉服务器  JSONP 返回时应该调用的回调函数名，然后拼接出对应的 JS 。
+以下情况都属于跨域：
+
+| 跨域原因说明       | 示例                                   |
+| ------------------ | -------------------------------------- |
+| 域名不同           | `www.jd.com` 与 `www.taobao.com`       |
+| 域名相同，端口不同 | `www.jd.com:8080` 与 `www.jd.com:8081` |
+| 二级域名不同       | `item.jd.com` 与 `miaosha.jd.com`      |
+
+如果**域名和端口都相同，但是请求路径不同**，不属于跨域，如：
+
+`www.jd.com/item` 
+
+`www.jd.com/goods`
+
+http和https也属于跨域
+
+而我们刚才是从`manage.leyou.com`去访问`api.leyou.com`，这属于二级域名不同，跨域了。
+
+##### 5.1.为什么有跨域问题？
+
+跨域不一定都会有跨域问题。
+
+因为跨域问题是浏览器对于ajax请求的一种安全限制：**一个页面发起的ajax请求，只能是与当前页域名相同的路径**，这能有效的阻止跨站攻击。
+
+因此：**跨域问题 是针对ajax的一种限制**。
+
+但是这却给我们的开发带来了不便，而且在实际生产环境中，肯定会有很多台服务器之间交互，地址和端口都可能不同，怎么办？
+
+
+
+##### 5.2.解决跨域问题的方案
+
+目前比较常用的跨域解决方案有3种：
+
+- Jsonp
+
+  最早的解决方案，利用script标签可以跨域的原理实现。
+
+  限制：
+
+  - 需要服务的支持
+  - 只能发起GET请求
+
+- nginx反向代理
+
+  思路是：利用nginx把跨域反向代理为不跨域，支持各种请求方式
+
+  缺点：需要在nginx进行额外配置，语义不清晰 
+
+- CORS
+
+  规范化的跨域请求解决方案，安全可靠。
+
+  优势：
+
+  - 在服务端进行控制是否允许跨域，可自定义规则
+  - 支持各种请求方式
+
+  缺点：
+
+  - 会产生额外的请求
+
+我们这里会采用cors的跨域方案。
+
+
+
+##### 5.3.cors解决跨域
+
+5.3.1.什么是cors
+
+CORS是一个W3C标准，全称是"跨域资源共享"（Cross-origin resource sharing）。
+
+它允许浏览器向跨源服务器，发出[`XMLHttpRequest`](http://www.ruanyifeng.com/blog/2012/09/xmlhttprequest_level_2.html)请求，从而克服了AJAX只能[同源](http://www.ruanyifeng.com/blog/2016/04/same-origin-policy.html)使用的限制。
+
+CORS需要浏览器和服务器同时支持。目前，所有浏览器都支持该功能，IE浏览器不能低于IE10。
+
+- 浏览器端：
+
+  目前，所有浏览器都支持该功能（IE10以下不行）。整个CORS通信过程，都是浏览器自动完成，不需要用户参与。
+
+- 服务端：
+
+  CORS通信与AJAX没有任何差别，因此你不需要改变以前的业务逻辑。只不过，浏览器会在请求中携带一些头信息，我们需要以此判断是否允许其跨域，然后在响应头中加入一些信息即可。这一般通过过滤器完成即可。
+
+
+
+5.3.2.原理有点复杂
+
+浏览器会将ajax请求分为两类，其处理方案略有差异：简单请求、特殊请求。
+
+##### 5.3.2.1.简单请求
+
+只要同时满足以下两大条件，就属于简单请求。：
+
+（1) 请求方法是以下三种方法之一：
+
+- HEAD
+- GET
+- POST
+
+（2）HTTP的头信息不超出以下几种字段：
+
+- Accept
+- Accept-Language
+- Content-Language
+- Last-Event-ID
+- Content-Type：只限于三个值`application/x-www-form-urlencoded`、`multipart/form-data`、`text/plain`
+
+
+
+当浏览器发现发起的ajax请求是简单请求时，会在请求头中携带一个字段：`Origin`.
+
+![1530460311064](C:\Users\hp\Desktop\java面试题\img\1530460311064.png)
+
+Origin中会指出当前请求属于哪个域（协议+域名+端口）。服务会根据这个值决定是否允许其跨域。
+
+如果服务器允许跨域，需要在返回的响应头中携带下面信息：
+
+```http
+Access-Control-Allow-Origin: http://manage.leyou.com
+Access-Control-Allow-Credentials: true
+Content-Type: text/html; charset=utf-8
+```
+
+- Access-Control-Allow-Origin：可接受的域，是一个具体域名或者*（代表任意域名）
+- Access-Control-Allow-Credentials：是否允许携带cookie，默认情况下，cors不会携带cookie，除非这个值是true
+
+> 有关cookie：
+
+要想操作cookie，需要满足3个条件：
+
+- 服务的响应头中需要携带Access-Control-Allow-Credentials并且为true。
+- 浏览器发起ajax需要指定withCredentials 为true
+- 响应头中的Access-Control-Allow-Origin一定不能为*，必须是指定的域名
+
+
+
+##### 5.3.2.2.特殊请求
+
+不符合简单请求的条件，会被浏览器判定为特殊请求,，例如请求方式为PUT。
+
+> 预检请求
+
+特殊请求会在正式通信之前，增加一次HTTP查询请求，称为"预检"请求（preflight）。
+
+浏览器先询问服务器，当前网页所在的域名是否在服务器的许可名单之中，以及可以使用哪些HTTP动词和头信息字段。只有得到肯定答复，浏览器才会发出正式的`XMLHttpRequest`请求，否则就报错。
+
+一个“预检”请求的样板：
+
+```http
+OPTIONS /cors HTTP/1.1
+Origin: http://manage.leyou.com
+Access-Control-Request-Method: PUT
+Access-Control-Request-Headers: X-Custom-Header
+Host: api.leyou.com
+Accept-Language: en-US
+Connection: keep-alive
+User-Agent: Mozilla/5.0...
+```
+
+与简单请求相比，除了Origin以外，多了两个头：
+
+- Access-Control-Request-Method：接下来会用到的请求方式，比如PUT
+- Access-Control-Request-Headers：会额外用到的头信息
+
+> 预检请求的响应
+
+服务的收到预检请求，如果许可跨域，会发出响应：
+
+```http
+HTTP/1.1 200 OK
+Date: Mon, 01 Dec 2008 01:15:39 GMT
+Server: Apache/2.0.61 (Unix)
+Access-Control-Allow-Origin: http://manage.leyou.com
+Access-Control-Allow-Credentials: true
+Access-Control-Allow-Methods: GET, POST, PUT
+Access-Control-Allow-Headers: X-Custom-Header
+Access-Control-Max-Age: 1728000
+Content-Type: text/html; charset=utf-8
+Content-Encoding: gzip
+Content-Length: 0
+Keep-Alive: timeout=2, max=100
+Connection: Keep-Alive
+Content-Type: text/plain
+```
+
+除了`Access-Control-Allow-Origin`和`Access-Control-Allow-Credentials`以外，这里又额外多出3个头：
+
+- Access-Control-Allow-Methods：允许访问的方式
+- Access-Control-Allow-Headers：允许携带的头
+- Access-Control-Max-Age：本次许可的有效时长，单位是秒，**过期之前的ajax请求就无需再次进行预检了**
+
+
+
+如果浏览器得到上述响应，则认定为可以跨域，后续就跟简单请求的处理是一样的了。
+
+
+
+##### 5.3.3.实现非常简单
+
+虽然原理比较复杂，但是前面说过：
+
+- 浏览器端都有浏览器自动完成，我们无需操心
+- 服务端可以通过拦截器统一实现，不必每次都去进行跨域判定的编写。
+
+事实上，SpringMVC已经帮我们写好了CORS的跨域过滤器：CorsFilter ,内部已经实现了刚才所讲的判定逻辑，我们直接用就好了。
+
+在`leyou-gateway`中编写一个配置类，并且注册CorsFilter：
+
+```java
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+
+@Configuration
+public class LeyouCorsConfig {
+    @Bean
+    public CorsFilter corsFilter() {
+        //1.添加CORS配置信息
+        CorsConfiguration config = new CorsConfiguration();
+        //1) 允许的域,不要写*，否则cookie就无法使用了
+        config.addAllowedOrigin("http://manage.leyou.com");
+        //2) 是否发送Cookie信息
+        config.setAllowCredentials(true);
+        //3) 允许的请求方式
+        config.addAllowedMethod("OPTIONS");
+        config.addAllowedMethod("HEAD");
+        config.addAllowedMethod("GET");
+        config.addAllowedMethod("PUT");
+        config.addAllowedMethod("POST");
+        config.addAllowedMethod("DELETE");
+        config.addAllowedMethod("PATCH");
+        // 4）允许的头信息
+        config.addAllowedHeader("*");
+
+        //2.添加映射路径，我们拦截一切请求
+        UrlBasedCorsConfigurationSource configSource = new UrlBasedCorsConfigurationSource();
+        configSource.registerCorsConfiguration("/**", config);
+
+        //3.返回新的CorsFilter.
+        return new CorsFilter(configSource);
+    }
+}
+```
+
+#### FastDFS
+
+##### **什么是分布式文件系统**
+
+分布式文件系统（Distributed File System）是指文件系统管理的物理存储资源不一定直接连接在本地节点上，而是通过计算机网络与节点相连。 
+
+通俗来讲：
+
+- 传统文件系统管理的文件就存储在本机。
+- 分布式文件系统管理的文件存储在很多机器，这些机器通过网络连接，要被统一管理。无论是上传或者访问文件，都需要通过管理中心来访问
+
+##### **什么是FastDFS**
+
+FastDFS是由淘宝的余庆先生所开发的一个轻量级、高性能的开源分布式文件系统。用纯C语言开发，功能丰富：
+
+- 文件存储
+- 文件同步
+- 文件访问（上传、下载）
+- 存取负载均衡
+- 在线扩容
+
+适合有大容量存储需求的应用或系统。同类的分布式文件系统有谷歌的GFS、HDFS（Hadoop）、TFS（淘宝）等。
+
+##### FastDFS的架构
+
+**架构图**
+
+先上图：
+
+ ![1526205318630](C:\Users\hp\Desktop\java面试题\img\1526205318630.png)
+
+**FastDFS两个主要的角色：Tracker Server 和 Storage Server 。**
+
+- Tracker Server：跟踪服务器，主要负责调度storage节点与client通信，在访问上起负载均衡的作用，和记录storage节点的运行状态，是连接client和storage节点的枢纽。 
+- Storage Server：存储服务器，保存文件和文件的meta data（元数据），每个storage server会启动一个单独的线程主动向Tracker cluster中每个tracker server报告其状态信息，包括磁盘使用情况，文件同步情况及文件上传下载次数统计等信息
+- Group：文件组，多台Storage Server的集群。上传一个文件到同组内的一台机器上后，FastDFS会将该文件即时同步到同组内的其它所有机器上，起到备份的作用。不同组的服务器，保存的数据不同，而且相互独立，不进行通信。 
+- Tracker Cluster：跟踪服务器的集群，有一组Tracker Server（跟踪服务器）组成。
+- Storage Cluster ：存储集群，有多个Group组成。
+
+##### 上传和下载流程
+
+> 上传
+
+ ![1526205664373](C:\Users\hp\Desktop\java面试题\img\1526205664373.png)
+
+1. Client通过Tracker server查找可用的Storage server。
+2. Tracker server向Client返回一台可用的Storage server的IP地址和端口号。
+3. Client直接通过Tracker server返回的IP地址和端口与其中一台Storage server建立连接并进行文件上传。
+4. 上传完成，Storage server返回Client一个文件ID，文件上传结束。
+
+> 下载
+
+ ![1526205705687](C:\Users\hp\Desktop\java面试题\img\1526205705687.png)
+
+1. Client通过Tracker server查找要下载文件所在的的Storage server。
+2. Tracker server向Client返回包含指定文件的某个Storage server的IP地址和端口号。
+3. Client直接通过Tracker server返回的IP地址和端口与其中一台Storage server建立连接并指定要下载文件。
+4. 下载文件成功。
 
 #### 8.RabbitMQ 的优点
 
@@ -255,7 +559,7 @@ Apache
 **JWT+RSA非对称加密**
 
 1. 用户登录
-2. 服务的认证，通过后根据 secret 生成token
+2. 服务的认证，通过后根据 私钥 生成token
 3. 将生成的token返回给浏览器
 4. 用户每次请求携带token
 5. 服务端利用公钥解读 JWT 签名，判断签名有效后，从payload中获取信息
@@ -1405,10 +1709,6 @@ public class Test4  {
 
 - 一旦垃圾回收器**准备好释放对象占用的空间**，**将首先调用其finalize() 方法**，并且在下一次垃圾回收动作发生时，才会真正回收对象占用的内存。
 
-
-
-### 5. static
-
 ### **6. 什么是 java 序列化？什么情况下需要序列化？**
 
 简单说就是为了保存在内存中的各种对象的状态（也就是实例变量，不是方法），并且可以把保存的对象状态再读出来。虽然你可以用你自己的各种各样的方法来保存object states，但是Java给你提供一种应该比你自己好的保存对象状态的机制，那就是序列化。
@@ -2321,17 +2621,7 @@ spring-webflux 是一个全新的非阻塞式的 Reactive Web 框架，可以用
 
 ### :red_circle:谈谈你对AOP的理解？
 
-**由来原因**
-
-OOP面向对象，允许开发者定义纵向的关系，但是不适用于定义横向的关系，导致了大量的重复代码，而不利于各个模块的重用
-
-**出现**
-
-AOP 面向切面，作为面向对象的一种补充，将那些与业务无关却对多个对象产生公共影响的代码封装起来成为一个可用的模块，这个模块成为切面。减少了系统的耦合性，提高了系统可维护性，通常用于权限认证、日志、事务管理。
-
-**使用方式**
-
-AOP的实现可分为静态代理、动态代理。
+AOP的出现是对OOP的一种补充和完善，OOP允取开发者纵向的关系，导致了大量的重复代码和高耦合。AOP作为面向对象的一种补充，允许开发者横向的开发，将那些重复代码封装成一个模块，形成切面。降低系统耦合性，有利于未来的维护性。比如日志、权限认证、事务管理这些用到了AOP思想。
 
 **静态代理**为Aspectj
 
@@ -2651,7 +2941,7 @@ Spring 事务的本质其实就是数据库对事务的支持，没有数据库�
 2. 如果这个Bean 实现了 BeanFactoryAware接口，将会调用setBeanFactory（）方法，传递的是Spring 工厂自身
 3. 如果这个Bean 实现了 ApplicationContextAware 接口，会调用setApplicationContext（ApplicationContext） 方法，传入Spring 上下文。
 
-**（4）BeanPostProcessor**
+**（4）BeanPostProcessor** 前置处理
 
 如果想对 Bean 进行一些自定义的处理，那么可以让Bean 实现此接口。
 
@@ -2659,9 +2949,11 @@ Spring 事务的本质其实就是数据库对事务的支持，没有数据库�
 
 如果在配置文件中配置了init-method ，则会自动调用其配置的初始化方法
 
-**（6）BeanPostProcessor**
+**（6）BeanPostProcessor** 后置处理
 
 如果这个Bean 实现了BeanPostProcessor 接口，将会调用 postProcessAfterInitialization（Object obj, String s）方法。由于这个方法是在初始化结束后调用的，所以可以**被用于缓存或内存技术**，
+
+**开始使用**
 
 **（7）DisposableBean**
 
@@ -2863,9 +3155,8 @@ Controller 返回⼀个⻚⾯单独使⽤  @Controller 不加  @ResponseBody 的
 
 ### 15.@Resource 和@Autowired 区别？
 
-![image-20201105104842377](C:\Users\hp\Desktop\java面试题\img\image-20201105104842377.png)
-
-![image-20201105104901407](C:\Users\hp\Desktop\java面试题\img\image-20201105104901407.png)
+- @Autowired 是按照ByType类型注入的，默认情况下它要求注入的对象必须存在。如果允取空值，那么设置required属性为false。可以配合使用@Qualifier 注解按照ByName 类型注入。
+- @Resource 默认是按照Byname类型注入的。@Resource 有两个属性name 和type 使用哪个就用哪种形式注入。如果不指定name 和type 默认使用ByName 注入。
 
 ### 16.Spring MVC常用注解
 
@@ -2936,6 +3227,98 @@ SpringBoot是一个框架，一种全新的编程规范，他的产生**简化�
 - Spring Boot使部署变简单
 - Spring Boot使监控变简单
 - Spring的不足
+
+#### 什么是Spring Boot的启动流程？
+
+第一部分进行SpringApplication的初始化模块，配置一些基本的环境变量、资源、构造器、监视器。
+
+第二部分实现了具体的的启动方案：启动流程的监听模块、加载配置环境模块、核心的创建上下文环境模块。
+
+第三部分是自动化配置模块，该模块作为Springboot自动配置核心
+
+**启动** 
+
+- 每个Spring boot 项目在启动时都需要调用SpringApplication.run() 启动。该方法需要使用@SpringBootApplication 注解。**其中包含** 
+  - @EnableAutoConfiguration：SpringBoot根据所声明的依赖对Spring 框架进行自动配置。
+  - @SpringBootConfiguration 装配所有bean事务，提供一个Spring的上下文环境。
+  - @ComponentScan 组件扫描，可以自动发现和装配Bean，默认扫描SpringApplication所在包路径下文件，通常把启动类放到根路径下。
+
+首先进入run()方法，run 方法创建一个SpringApplication 实例，在构造方法内，调用了一个initialize 方法。该方法主要给SpringApplication对象赋一些初值。
+
+```java
+public ConfigurableApplicationContext run(String... args) {
+		StopWatch stopWatch = new StopWatch();
+		stopWatch.start();
+		ConfigurableApplicationContext context = null;
+		FailureAnalyzers analyzers = null;
+		configureHeadlessProperty();
+    	//1.创建应用监听器并开始监听
+		SpringApplicationRunListeners listeners = getRunListeners(args);
+		listeners.starting();
+		try {
+			ApplicationArguments applicationArguments = new DefaultApplicationArguments(
+					args);
+            //2.加载SpringBoot配置环境
+			ConfigurableEnvironment environment = prepareEnvironment(listeners,
+					applicationArguments);
+			Banner printedBanner = printBanner(environment);
+            //4.创建run 方法的返回对象。
+			context = createApplicationContext();
+			analyzers = new FailureAnalyzers(context);
+			prepareContext(context, environment, listeners, applicationArguments,
+					printedBanner);
+			refreshContext(context);
+			afterRefresh(context, applicationArguments);
+			listeners.finished(context, null);
+			stopWatch.stop();
+			if (this.logStartupInfo) {
+				new StartupInfoLogger(this.mainApplicationClass)
+						.logStarted(getApplicationLog(), stopWatch);
+			}
+			return context;
+		}
+		catch (Throwable ex) {
+			handleRunFailure(context, listeners, analyzers, ex);
+			throw new IllegalStateException(ex);
+		}
+	}
+```
+
+
+
+![image-20201211202543675](C:\Users\hp\Desktop\java面试题\img\image-20201211202543675.png)
+
+可以看出，*Environment最终都实现了PropertyResolver接口，我们平时通过environment对象获取配置文件中指定Key对应的value方法时，就是调用了propertyResolver接口的getProperty方法
+
+3. **配置环境(Environment)加入到监听器对象中(SpringApplicationRunListeners)**
+4. 创建run方法的返回对象：ConfigurableApplicationContext(应用配置上下文)，我们可以看一下创建方法：
+
+```java
+protected ConfigurableApplicationContext createApplicationContext() {
+   Class<?> contextClass = this.applicationContextClass;
+   if (contextClass == null) {
+      try {
+         contextClass = Class.forName(this.webEnvironment
+               ? DEFAULT_WEB_CONTEXT_CLASS : DEFAULT_CONTEXT_CLASS);
+      }
+      catch (ClassNotFoundException ex) {
+         throw new IllegalStateException(
+               "Unable create a default ApplicationContext, "
+                     + "please specify an ApplicationContextClass",
+               ex);
+      }
+   }
+   return (ConfigurableApplicationContext) BeanUtils.instantiate(contextClass);
+}
+```
+
+方法会先获取显式设置的应用上下文(applicationContextClass)，如果不存在，再加载默认的环境配置（通过是否是web environment判断），默认选择AnnotationConfigApplicationContext注解上下文（通过扫描所有注解类来加载bean），最后通过BeanUtils实例化上下文对象，并返回，ConfigurableApplicationContext类图如下：
+
+**Spring boot 的启动，**主要创建了配置环境（environment）、事件监听、应用上下文（applicationnContext），并基于以上条件，在容器中实例化我们所需要的bean，至此，Spring boot启动的程序已经构造完成。
+
+**自动化配置**
+
+
 
 ### 2.spring boot 核心配置文件是什么？
 
@@ -4963,27 +5346,30 @@ public class Test{
 
 **FixedThreadPool**
 
-- 固定长度的线程池
-
-- 如果当前线程数少于核心线程（corePoolSize），则创建新任务
-- 在线程池完成预热后，将新加入的任务存入LinkedBlockQueue（无界队列）
+**固定大小**的线程池，初始化时指定线程池的大小。当向线程池中添加线程时，首先判断是否小于 corePollSize ，如果满足条件则像线程池中添加线程。当线程预热完成后，向队列中添加线程。底层实现是使用LinkedBlockedQueeu 无界队列。会反复从队列中获取任务执行。
 
 **SingleThreadPool**
 
-- 如果当前线程少于核心线程，则创建一个新的线程来执行任务
-- 在线程池完成预热后（当前线程有一个运行的线程），将任务加入到LinkedBlockingQueue
-- 会无限循环反复从LinkedBlockingQueue中获取任务来执行
+核心线程池为1的线程数，底层也是使用LinkedBlockingQueue实现的。当预热完成后从队列中获取任务
 
 **CacheThreadPool**
 
-- 可缓存的线程池，如果线程池的规模超过了处理请求将会自动回收，而需求增加时将会自动增加新线程，没有上限。
-
-- 核心线程池为0 。
-- 使用没有容量的SynchronousQueue作为队列。
+核心线程池数量为0，底层是使用一个无容量的 SynchronousQueue 实现的，它的最大线程池数量为Integer.Max_Value 。当线程池有空闲线程时，主线程执行offer() 操作，线程池执行poll() 操作，表示匹配成功，主线程把任务交给空闲线程执行。如果此时没有空闲线程，那么会新建一个新线程任务。再去与主线程匹配。当线程池空闲线程等待 60 秒无操作就会自动终止。
 
  **ScheduledThreadPool**
 
+底层是使用delayQueue 实现的，封装了一个优先级队列。将time 小的放到前面。
+
 - 创建了一个固定长度的线程池，而且以延迟或定时的方式来执行任务，类似于Timer。
+
+#### 饱和策略
+
+当线程池满后一共有4种策略
+
+- 直接抛出异常
+- 只用调用者所在线程来运行任务
+- 丢弃队列里最近一个任务，并执行当前任务
+- 不处理，丢弃掉
 
 #### 如果你提交任务时，线程池队列已满，这时会发生什么
 
@@ -5102,7 +5488,23 @@ synchronized是和if、else、for、while一样的**关键字**，**ReentrantLoc
 - 静态同步方法，锁是当前类的class对象
 - 同步方法块，锁是括号里面的对象
 
+### :heartpulse:volatile 
 
+#### volatile关键字的作用
+
+volatile 主要体现在以下两方面，重排序和内存可见性。volatile提供了happens-before原则保证，确保一个线程的修改对另一个线程是可见的
+
+### :heartpulse:final
+
+#### 都哪些类是final的？
+
+基本数据类型包装类：
+
+**Boolean，Character，Short，Integer，Long，Float，Double，Byte，Void**
+
+**字符串类**
+
+String StringBuffer StringBuilder
 
 ###  synchronized 和 volatile 的区别是什么？
 
@@ -5129,7 +5531,7 @@ Java提供ThreadLocal类来支持线程局部变量，是一种实现线程安�
 
 ### 25.1ThreadLocal 是怎么解决并发安全的
 
-ThreadLocal 为每一个线程维护变量的副本，把共享数据可见性范围限制在同一个线程内
+ThreadLocal **为每一个线程维护变量的副本**，**把共享数据可见性范围限制在同一个线程内**
 
 实现原理:  在ThreadLocal 里存在一个Map 用于存储每一个线程的变量的副本
 
@@ -5141,7 +5543,7 @@ ThreadLocal 为每一个线程维护变量的副本，把共享数据可见性�
 
 要注意remove：
 
-ThreadLocal 的实现是基于一个所谓的 ThreadLocalMap ，在其中，它的key 是一个弱引用。
+ThreadLocal 的实现是基于一个所谓的 **ThreadLocalMap** ，在其中，它的key 是一个弱引用。
 
 通常弱引用都会和引用队列配合清理机制使用，但是 ThreadLocal 没有这么做
 
@@ -5581,9 +5983,9 @@ group by 将过滤的条件进行分组
 
 having 对上面已经分组的数据进行过滤
 
-select 查看结果集中的哪个列，或列的计算结果
-
 order by 按什么样的顺序排序
+
+select 查看结果集中的哪个列，或列的计算结果
 
 ### 优化器选择查询索引的影响因素？
 
@@ -5978,7 +6380,7 @@ InnoDB 默认是自动提交事务的，每一次 SQL 操作（非 select 操作
 
 InnoDB的MVCC是通过在每行记录后面保存两个隐藏的列来实现。这两个列保存了行的创始时间和行的过期时间（删除时间）。当然存储的并不是真实的时间而是版本号。没开始一个新的事务，系统版本号自动递增，事务开始时刻系统的版本号作为事务的版本号，用来查询到的每行记录的版本号进行比较。
 
-### 可重复读隔离级别下MVCC如何工作？
+### :heartbeat: 可重复读隔离级别下MVCC如何工作？
 
 *   SELECT：InnoDB 会根据以下条件检查每一行记录：第一，InnoDB 只查找版本早于当前事务版本的数据行，这样可以确保事务读取的行要么是在开始事务之前已经存在要么是事务自身插入或者修改过的。第二，行的删除版本号要么未定义，要么大于当前事务版本号，这样可以确保事务读取到的行在事务开始之前未被删除。
 
@@ -7556,7 +7958,7 @@ Redis在内存中对数字进行递增或递减的操作实现的非常好。集
 
 ![image-20201208120850165](C:\Users\hp\Desktop\java面试题\img\image-20201208120850165.png)
 
-### **3.redis 和 memecache 有什么区别？**
+### **:heart: redis 和 memecache 有什么区别？**
 
 - memcached所有的值均是简单的字符串，redis作为其替代者，支持更为丰富的数据类型
 - redis的速度比memcached快很多
@@ -7929,8 +8331,15 @@ redis 事务是一组命令的集合，是redis的最小执行单位，一个事
 - Redis 分布式锁其实就是在系统里面占一个“坑”，其他程序也要占“坑”的时候，占用成功了就可以继续执行，失败了就只能放弃或稍后重试。
 - 占坑一般使用 setnx(set if not exists)指令，只允许被一个程序占有，使用完调用 del 释放锁。
 
-
 #### 3. 分布式系统如何实现分布式锁？
+
+**Red Lock** 
+
+- 尝试从N个独立的Redis 实例中获取锁
+- 计算获取锁消耗的时间，只有当这个时间小于锁的过期时间，并且大多数（N/2+1）实例上获取了锁。
+- 如果获取锁失败，每个实例释放锁。
+
+**set nx expire**
 
 在上述算法的分布式版本中，我们假设我们有N个redis-master节点，这些节点完全独立，所以我们不使用复制或任何其他隐式协调系统。我们已经描述了如何在单个实例中安全的获取和释放锁，我们理所当然的认为该算法将使用此方法在单个示例中获取并释放锁。在我们的例子中，我们设置N=5，这是一个合理的值，所以我们需要在不同的计算机或虚拟机上运行5个redis-master节点，以确保他们以最独立的方式失败（单个节点挂掉不会影响其他节点）。
 
@@ -8445,7 +8854,7 @@ DomainA客户端（浏览器） ==> DomainA服务器 ==> DomainB服务器 ==> Do
 
 jsonp 即 json+padding，动态创建script标签，利用script标签的src属性可以获取任何域下的js脚本，通过这个特性(也可以说漏洞)，服务器端不在返货json格式，而是返回一段调用某个函数的js代码，在src中进行了调用，这样实现了跨域。
 
-### 9.http 响应码 301 和 302 代表的是什么？有什么区别？**
+### 9.http 响应码 301 和 302 代表的是什么？有什么区别？
 
 答：301，302 都是HTTP状态的编码，都代表着某个URL发生了转移。
 
