@@ -5366,10 +5366,10 @@ public class Test{
 
 当线程池满后一共有4种策略
 
-- 直接抛出异常
-- 只用调用者所在线程来运行任务
-- 丢弃队列里最近一个任务，并执行当前任务
-- 不处理，丢弃掉
+- 直接抛出异常 AbortPolicy
+- 只用调用者所在线程来运行任务 CallerRunsPolicy
+- 丢弃队列里最近一个任务，并执行当前任务 DiscardOldestPolicy 
+- 不处理，丢弃掉 DiscardPolicy 
 
 #### 如果你提交任务时，线程池队列已满，这时会发生什么
 
